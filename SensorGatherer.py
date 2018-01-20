@@ -4,6 +4,7 @@ import datetime
 import time
 import re
 import traceback
+import config
 
 import mysql.connector as mariadb
 
@@ -29,7 +30,7 @@ SAVE_TO_DB = True
 
 def connect_to_db():
     try:
-        return mariadb.connect(user='XX', password='XX', host='XX', database='XX')
+        return mariadb.connect(user=config.mysql['user'], password=config.mysql['password'], host=config.mysql['host'], database=config.mysql['database'])
     except mariadb.Error as error:
         print("Error opening connection to DB: {}".format(error))
         raise
