@@ -101,11 +101,10 @@ def save_record(place, value, valueType, unit, measureTime, creationTime):
     if value is None or valueType is None:
         value = 'null'
 
-    sqlSentence = ("INSERT INTO measurement (place,type,value,unit,measurement_date,created_at) VALUES ('%s','%s',%s,'%s','%s','%s');\n" % (place, valueType, value, measureTime, unit, creationTime))
+    sqlSentence = ("INSERT INTO measurement (place,type,value,unit,measurement_date,created_at) VALUES ('%s','%s',%s,'%s','%s','%s');\n" % (place, valueType, value, unit, measureTime, creationTime))
 
     if (SAVE_TO_FILE):
         try:
-            #f = open('%s/temps_%s.txt' % (MEASUREMENTS_FOLDER, SCRIPT_START_DATE.strftime("%Y-%m-%d_%H%M")),'a')
             f = open('%s/temps_%s.log' % (MEASUREMENTS_FOLDER, SCRIPT_START_DATE.strftime(MEASUREMENTS_FILE_SUFFIX)),'a')
             f.write(sqlSentence)
             f.close()
