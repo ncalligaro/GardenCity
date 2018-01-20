@@ -104,17 +104,17 @@ def get_remote_sensor_data():
     radio.stopListening()
     return RH, T
 
-def save_record(place, value, valueType, unit, measureTime, creationTime):
+def save_record(place, value, value_type, unit, measure_time, creation_time):
 
-    if value is None or valueType is None:
+    if value is None or value_type is None:
         value = 'null'
 
-    sqlSentence = ("INSERT INTO measurement (place,type,value,unit,measurement_date,created_at) VALUES ('%s','%s',%s,'%s','%s','%s');\n" % (place, valueType, value, unit, measureTime, creationTime))
+    sql_sentence = ("INSERT INTO measurement (place,type,value,unit,measurement_date,created_at) VALUES ('%s','%s',%s,'%s','%s','%s');\n" % (place, value_type, value, unit, measure_time, creation_time))
 
     if (SAVE_TO_FILE):
         try:
             f = open('%s/temps_%s.log' % (MEASUREMENTS_FOLDER, SCRIPT_START_DATE.strftime(MEASUREMENTS_FILE_SUFFIX)),'a')
-            f.write(sqlSentence)
+            f.write(sql_sentence)
             f.close()
         except Error as error:
             error_print("Error saving to file: {}".format(error))
@@ -124,7 +124,7 @@ def save_record(place, value, valueType, unit, measureTime, creationTime):
         try:
             db_connection = connect_to_db()
             cursor = db_connection.cursor()
-            cursor.execute(sqlSentence)
+            cursor.execute(sql_sentence)
             db_connection.commit()
         except mariadb.Error as error:
             error_print("Error saving to DB: {}".format(error))
