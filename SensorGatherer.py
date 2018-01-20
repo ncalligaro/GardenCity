@@ -23,10 +23,11 @@ GPIO.setmode(GPIO.BCM)
 radio = NRF24(GPIO, spidev.SpiDev())
 
 SCRIPT_START_DATE = datetime.datetime.utcnow()
-MEASUREMENTS_FOLDER = 'measurements'
+MEASUREMENTS_FOLDER = config.file['path']
+MEASUREMENTS_FILE_SUFFIX = config.file['suffix']
 
-SAVE_TO_FILE = True
-SAVE_TO_DB = True
+SAVE_TO_FILE = config.file['save_to_file']
+SAVE_TO_DB = config.mysql['save_to_DB']
 
 def connect_to_db():
     try:
@@ -97,16 +98,15 @@ def get_remote_sensor_data():
 
 def save_record(place, value, valueType, measureTime, creationTime):
 
-    sqlSentence = None
-    if value is not None and valueType is not None:
-        sqlSentence = ("INSERT INTO measurement (place,type,value,unit,measurement_date,created_at) VALUES ('%s','%s',%s,'P','%s','%s');\n" % (place, valueType, value, measureTime, creationTime))
-    else:
-        sqlSentence = ("INSERT INTO measurement (place,type,value,unit,measurement_date,created_at) VALUES ('%s','%s',%s,'P','%s','%s');\n" % (place, valueType, 'null', measureTime, creationTime))
-    
+    if value is None or valueType is None:
+        value = 'null'
+        
+    sqlSentence = ("INSERT INTO measurement (place,type,value,unit,measurement_date,created_at) VALUES ('%s','%s',%s,'P','%s','%s');\n" % (place, valueType, value, measureTime, creationTime))
+
     if (SAVE_TO_FILE):
         try:
-            f = open('%s/temps_%s.txt' % (MEASUREMENTS_FOLDER, SCRIPT_START_DATE.strftime("%Y-%m-%d_%H%M")),'a')
-            #SAVE
+            #f = open('%s/temps_%s.txt' % (MEASUREMENTS_FOLDER, SCRIPT_START_DATE.strftime("%Y-%m-%d_%H%M")),'a')
+            f = open('%s/temps_%s.log' % (MEASUREMENTS_FOLDER, SCRIPT_START_DATE.strftime(MEASUREMENTS_FILE_SUFFIX)),'a')
             f.write(sqlSentence)
             f.close()
         except Error as error:
