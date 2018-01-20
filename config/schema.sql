@@ -11,6 +11,9 @@ CREATE TABLE
     UPDATE
         CURRENT_TIMESTAMP,
         type VARCHAR(50),
-        PRIMARY KEY (id)
+        PRIMARY KEY (id),
+        INDEX place_ix (place),
+        INDEX type_ix (type),
+        INDEX measurement_date_ix (measurement_date)
     )
     ENGINE=InnoDB DEFAULT CHARSET=utf8;
