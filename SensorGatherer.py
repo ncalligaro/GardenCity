@@ -28,6 +28,12 @@ SCRIPT_START_DATE = datetime.datetime.utcnow()
 MEASUREMENTS_FOLDER = config.file['path']
 MEASUREMENTS_FILE_SUFFIX = config.file['suffix']
 
+LOCATION_DINING = 'Dining'
+LOCATION_ROOM = 'Room'
+
+MEASUREMENT_TYPE_HUMIDITY = 'humidity'
+MEASUREMENT_TYPE_TEMPERATURE = 'temperature'
+
 SAVE_TO_FILE = config.file['save_to_file']
 SAVE_TO_DB = config.mysql['save_to_DB']
 
@@ -126,6 +132,12 @@ def save_record(place, value, valueType, unit, measureTime, creationTime):
             if db_connection is not None:
                 db_connection.close()
 
+def save_humidity_data(place, value, measurement_date)
+    save_record(place, value, MEASUREMENT_TYPE_HUMIDITY, 'P', measurement_date, measurement_date)
+
+def save_temperature_data(place, value, measurement_date)
+    save_record(place, value, MEASUREMENT_TYPE_TEMPERATURE, 'C', measurement_date, measurement_date)
+
 def error_print(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
@@ -139,12 +151,16 @@ def main():
             now = datetime.datetime.utcnow()
 
             DRH, DT = get_local_sensor_data()
-            save_record('Dining', DRH, 'humidity', 'P', now.isoformat(), now.isoformat())
-            save_record('Dining', DT, 'temperature', 'C', now.isoformat(), now.isoformat())
+            save_humidity_data(LOCATION_DINING, DRH, now.isoformat())
+            save_temperature_data(LOCATION_DINING, DT, now.isoformat())
+            #save_record(LOCATION_DINING, DRH, MEASUREMENT_TYPE_HUMIDITY, 'P', now.isoformat(), now.isoformat())
+            #save_record(LOCATION_DINING, DT, MEASUREMENT_TYPE_TEMPERATURE, 'C', now.isoformat(), now.isoformat())
 
             RRH, RT = get_remote_sensor_data()
-            save_record('Room', RRH, 'humidity', 'P', now.isoformat(), now.isoformat())
-            save_record('Room', RT, 'temperature', 'C', now.isoformat(), now.isoformat())
+            save_humidity_data(LOCATION_ROOM, RRH, now.isoformat())
+            save_temperature_data(LOCATION_ROOM, RT, now.isoformat())
+            #save_record(LOCATION_ROOM, RRH, MEASUREMENT_TYPE_HUMIDITY, 'P', now.isoformat(), now.isoformat())
+            #save_record(LOCATION_ROOM, RT, MEASUREMENT_TYPE_TEMPERATURE, 'C', now.isoformat(), now.isoformat())
 
             time.sleep(60)
     except KeyboardInterrupt:
