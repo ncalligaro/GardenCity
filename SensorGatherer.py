@@ -96,12 +96,12 @@ def get_remote_sensor_data():
     radio.stopListening()
     return RH, T
 
-def save_record(place, value, valueType, measureTime, creationTime):
+def save_record(place, value, valueType, unit, measureTime, creationTime):
 
     if value is None or valueType is None:
         value = 'null'
-        
-    sqlSentence = ("INSERT INTO measurement (place,type,value,unit,measurement_date,created_at) VALUES ('%s','%s',%s,'P','%s','%s');\n" % (place, valueType, value, measureTime, creationTime))
+
+    sqlSentence = ("INSERT INTO measurement (place,type,value,unit,measurement_date,created_at) VALUES ('%s','%s',%s,'%s','%s','%s');\n" % (place, valueType, value, measureTime, unit, creationTime))
 
     if (SAVE_TO_FILE):
         try:
@@ -133,12 +133,12 @@ def main():
             now = datetime.datetime.utcnow()
 
             DRH, DT = get_local_sensor_data()
-            save_record('Dining', DRH, 'humidity', now.isoformat(), now.isoformat())
-            save_record('Dining', DT, 'temperature', now.isoformat(), now.isoformat())
+            save_record('Dining', DRH, 'humidity', 'P', now.isoformat(), now.isoformat())
+            save_record('Dining', DT, 'temperature', 'C', now.isoformat(), now.isoformat())
 
             RRH, RT = get_remote_sensor_data()
-            save_record('Room', RRH, 'humidity', now.isoformat(), now.isoformat())
-            save_record('Room', RT, 'temperature', now.isoformat(), now.isoformat())
+            save_record('Room', RRH, 'humidity', 'P', now.isoformat(), now.isoformat())
+            save_record('Room', RT, 'temperature', 'C', now.isoformat(), now.isoformat())
 
             time.sleep(60)
     except KeyboardInterrupt:
