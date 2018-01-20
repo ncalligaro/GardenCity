@@ -1,4 +1,6 @@
 #!/usr/bin/python
+from __future__ import print_function
+import sys
 import serial
 import datetime
 import time
@@ -33,7 +35,7 @@ def connect_to_db():
     try:
         return mariadb.connect(user=config.mysql['user'], password=config.mysql['password'], host=config.mysql['host'], database=config.mysql['database'])
     except mariadb.Error as error:
-        print("Error opening connection to DB: {}".format(error))
+        error_print("Error opening connection to DB: {}".format(error))
         raise
 
 def configure_radio():
@@ -109,7 +111,7 @@ def save_record(place, value, valueType, unit, measureTime, creationTime):
             f.write(sqlSentence)
             f.close()
         except Error as error:
-            print("Error saving to file: {}".format(error))
+            error_print("Error saving to file: {}".format(error))
 
     if (SAVE_TO_DB):
         db_connection = None
@@ -119,13 +121,18 @@ def save_record(place, value, valueType, unit, measureTime, creationTime):
             cursor.execute(sqlSentence)
             db_connection.commit()
         except mariadb.Error as error:
-            print("Error saving to DB: {}".format(error))
+            error_print("Error saving to DB: {}".format(error))
         finally:
             if db_connection is not None:
                 db_connection.close()
 
+def error_print(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
 
 def main():
+    error_print("Saving to file: %s" % (SAVE_TO_FILE))
+    error_print("Saving to DB: %s" % (SAVE_TO_DB))
+    error_print("Starting loop")
     try:
         configure_radio()
         while True:
@@ -141,13 +148,13 @@ def main():
 
             time.sleep(60)
     except KeyboardInterrupt:
-        print "\nbye!"
+        print("\nbye!")
     except Exception as e:
-        print "\nOther error occurred"
+        print("\nOther error occurred")
         print (e)
         print(traceback.format_exc())
     finally:
-        print "\nCleaning GPIO port\n"
+        print("\nCleaning GPIO port\n")
         GPIO.cleanup()
 
 # call main
