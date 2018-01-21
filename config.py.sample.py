@@ -11,4 +11,10 @@ file = { 'save_to_file': True,
 		 'suffix' : '%Y-%m-%d',
 		 'path' : 'someFolderWithinCurrentPWD' }
 
+open_map = { 'host': 'api.openweathermap.org',
+             'path': '/data/2.5/weather',
+             'api_key': '',
+			 'city': 'London,uk' }
+
+
 
