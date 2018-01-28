@@ -207,17 +207,17 @@ def save_two_value_record(place, value, second_value, value_type, unit, measurem
             #    second_value_query = "1=1"
             #query_sentence = ("SELECT * FROM measurement where place = '%s' AND type = '%s' AND measurement_date = %s and value = %s AND %s" % (place, value_type, measurement_date, value, second_value_query))
             query_sentence = ("SELECT * FROM measurement where place = '%s' AND type = '%s' AND measurement_date = %s" % (place, value_type, measurement_date))
-            error_print("query_sentence: %s" % query_sentence)
+            #error_print("query_sentence: %s" % query_sentence)
             cursor.execute(query_sentence)
             cursor.fetchall()
-            error_print(cursor.rowcount)
+            #error_print(cursor.rowcount)
             if int(cursor.rowcount) == 0:
                 cursor.close()
                 cursor = db_connection.cursor()
                 cursor.execute(sql_sentence)
                 db_connection.commit()
-            else:
-                error_print("Values already exist in DB: %s" % sql_sentence)
+            #else:
+                #error_print("Values already exist in DB: %s" % sql_sentence)
         except mariadb.Error as error:
             error_print("Error saving to DB: {}".format(error))
         finally:
