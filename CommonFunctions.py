@@ -1,38 +1,29 @@
 #!/usr/bin/python
+import config
+
 from __future__ import print_function
 import sys
-import serial
+#import serial
 import datetime
 import time
 import re
-import traceback
-import config
-import httplib
-import urllib
-import json
+#import traceback
+#import httplib
+#import urllib
+#import json
 
 import mysql.connector as mariadb
 
 import sys
-import RPi.GPIO as GPIO
-from lib_nrf24 import NRF24
-import spidev
+#import RPi.GPIO as GPIO
+#from lib_nrf24 import NRF24
+#import spidev
 
-import Adafruit_DHT
-#import urllib2
-
-LOCAL_TEMPERATURE_HUMIDITY_SENSOR_PORT = 23;  #BCM format
-
-GPIO.setmode(GPIO.BCM)
-#GPIO.setmode(GPIO.BOARD)
-radio = NRF24(GPIO, spidev.SpiDev())
+#import Adafruit_DHT
 
 SCRIPT_START_DATE = datetime.datetime.utcnow()
 MEASUREMENTS_FOLDER = config.file['path']
 MEASUREMENTS_FILE_SUFFIX = config.file['suffix']
-
-LOCATION_DINING = 'Dining'
-LOCATION_ROOM = 'Room'
 
 MEASUREMENT_TYPE_HUMIDITY = 'humidity'
 MEASUREMENT_TYPE_TEMPERATURE = 'temperature'
@@ -45,7 +36,6 @@ MEASUREMENT_TYPE_RAIN = 'rain'
 MEASUREMENT_TYPE_CLOUDS = 'clouds'
 MEASUREMENT_TYPE_SUNRISE = 'sunrise'
 MEASUREMENT_TYPE_SUNSET = 'sunset'
-
 
 SAVE_TO_FILE = config.file['save_to_file']
 SAVE_TO_DB = config.mysql['save_to_DB']
@@ -67,110 +57,6 @@ def connect_to_db():
     except mariadb.Error as error:
         error_print("Error opening connection to DB: {}".format(error))
         raise
-
-def configure_radio():
-    pipes = [[0xE8, 0xE8, 0xF0, 0xF0, 0xE1], [0xF0, 0xF0, 0xF0, 0xF0, 0xE1]]
-
-    radio.begin(0, 17)
-
-    radio.setPayloadSize(32)
-    radio.setChannel(0x76)
-    radio.setDataRate(NRF24.BR_1MBPS)
-    radio.setPALevel(NRF24.PA_MIN)
-
-    radio.setAutoAck(True)
-    radio.enableDynamicPayloads()
-    radio.enableAckPayload()
-
-    radio.openWritingPipe(pipes[0])
-    radio.openReadingPipe(1, pipes[1])
-    radio.printDetails()
-    # radio.startListening()
-
-def get_dining_sensor_data():
-    RH, T = Adafruit_DHT.read_retry(Adafruit_DHT.DHT22, LOCAL_TEMPERATURE_HUMIDITY_SENSOR_PORT)
-    if RH is not None and T is not None:
-        return (str(RH), str(T))
-    else:
-        return None, None
-
-def get_current_city_data():
-    http_connection = httplib.HTTPSConnection(config.open_map['host'])
-    http_connection.request("GET", ("%s?q=%s&units=%s&appid=%s" % (config.open_map['path'], config.open_map['city'], 'metric', config.open_map['api_key'])))
-    response = http_connection.getresponse()
-    #if (response.status != httplib.OK):
-    #    print 'Error ocurred'
-    #    print response.status, response.reason
-    #    return None #Replace this with an exception
-    #else:
-    jsondata = response.read()
-    data = json.loads(jsondata)
-    return data
-
-def get_room_sensor_data():
-    message = list("GETREADINGS")
-    while len(message) < 32:
-        message.append(0)
-
-    start = time.time()
-    radio.write(message)
-    radio.startListening()
-
-    while not radio.available(0):
-        time.sleep(1 / 100)
-        if time.time() - start > 5: #Wait 5 seconds
-            break
-
-    receivedMessage = []
-    radio.read(receivedMessage, radio.getDynamicPayloadSize())
-
-    string = ""
-    for n in receivedMessage:
-        # Decode into standard unicode set
-        if (n >= 32 and n <= 126):
-            string += chr(n)
-    response = "{}".format(string)
-    #T: 18.80 - H: 53.90O
-    pattern = re.compile("T: (\d+.\d*) - H: (\d+.\d*)", re.IGNORECASE)
-    result = pattern.search(response)
-    if result is None:
-        radio.stopListening()
-        return None, None
-    T = result.group(1)
-    RH = result.group(2)
-    radio.stopListening()
-    return RH, T
-
-def save_openweather_map_info_to_DB(json_data, creation_time):
-    current_place = get_from_dic(json_data, 'name')
-    place = "city_%s" % current_place
-    measurement_date = get_from_dic(json_data, 'dt')
-
-    current_temperature = get_from_dic(json_data, 'main', 'temp')
-    current_pressure = get_from_dic(json_data, 'main', 'pressure')
-    current_humidity = get_from_dic(json_data, 'main', 'humidity')
-    current_temperature_min = get_from_dic(json_data, 'main', 'temp_min')
-    current_temperature_max = get_from_dic(json_data, 'main', 'temp_max')
-    current_rain = get_from_dic(json_data, 'rain', '3h')
-    current_visibility = get_from_dic(json_data, 'visibility')
-    current_wind_speed = get_from_dic(json_data, 'wind', 'speed')
-    current_wind_direction = get_from_dic(json_data, 'wind', 'deg')
-    current_clouds = get_from_dic(json_data, 'clouds', 'all')
-    current_sunrise = get_from_dic(json_data, 'sys', 'sunrise')
-    current_sunset = get_from_dic(json_data, 'sys', 'sunset')  
-
-    save_temperature_data(place, current_temperature, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
-    save_pressure_data(place, current_pressure, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
-    save_humidity_data(place, current_humidity, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
-    save_temperature_range_min_data(place, current_temperature_min, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
-    save_temperature_range_max_data(place, current_temperature_max, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
-    save_rain_data(place, current_rain, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
-    save_visibility_data(place, current_visibility, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
-    save_wind_data(place, current_wind_speed, current_wind_direction, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
-    save_clouds_data(place, current_clouds, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
-    save_sunrise_data(place, current_sunrise, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
-    save_sunset_data(place, current_sunset, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
-
 
 def save_two_value_record(place, value, second_value, value_type, unit, measurement_date, creation_time):
     if value is None or value_type is None:
@@ -273,37 +159,3 @@ def save_sunset_data(place, value, measurement_date, creation_time):
 def error_print(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
-def main():
-    error_print("Saving to file: %s" % (SAVE_TO_FILE))
-    error_print("Saving to DB: %s" % (SAVE_TO_DB))
-    error_print("Starting loop")
-    try:
-        configure_radio()
-        while True:
-            now = datetime.datetime.utcnow()
-
-            DRH, DT = get_dining_sensor_data()
-            save_humidity_data(LOCATION_DINING, DRH, now.isoformat(), now.isoformat())
-            save_temperature_data(LOCATION_DINING, DT, now.isoformat(), now.isoformat())
-            
-            RRH, RT = get_room_sensor_data()
-            save_humidity_data(LOCATION_ROOM, RRH, now.isoformat(), now.isoformat())
-            save_temperature_data(LOCATION_ROOM, RT, now.isoformat(), now.isoformat())
-            
-            openweathermap_jsondata = get_current_city_data()
-            save_openweather_map_info_to_DB(openweathermap_jsondata, now.isoformat())
-
-            time.sleep(60)
-    except KeyboardInterrupt:
-        print("\nbye!")
-    except Exception as e:
-        print("\nOther error occurred")
-        print (e)
-        print(traceback.format_exc())
-    finally:
-        print("\nCleaning GPIO port\n")
-        GPIO.cleanup()
-
-# call main
-if __name__ == '__main__':
-   main()
