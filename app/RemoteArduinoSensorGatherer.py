@@ -1,9 +1,9 @@
 #!/usr/bin/python
-import config
+from config import config
 
 import commonFunctions
 
-from __future__ import print_function
+#from __future__ import print_function
 import sys
 import serial
 import datetime
@@ -39,7 +39,7 @@ def configure_radio():
 
     radio.openWritingPipe(pipes[0])
     radio.openReadingPipe(1, pipes[1])
-    radio.printDetails()
+    #radio.printDetails()
     # radio.startListening()
 
 def get_remote_sensor_data():
@@ -77,21 +77,18 @@ def get_remote_sensor_data():
     return RH, T
 
 def main():
-    error_print("Saving to file: %s" % (SAVE_TO_FILE))
-    error_print("Saving to DB: %s" % (SAVE_TO_DB))
-    error_print("Starting loop")
+    commonFunctions.error_print("Saving to file: %s" % (config.file['save_to_file']))
+    commonFunctions.error_print("Saving to DB: %s" % (config.mysql['save_to_DB']))
+    commonFunctions.error_print("Starting loop")
     try:
         configure_radio()
         while True:
             now = datetime.datetime.utcnow()
 
             RRH, RT = get_remote_sensor_data()
-            save_humidity_data(config.remote_arduino_sensor['location_name'], RRH, now.isoformat(), now.isoformat())
-            save_temperature_data(config.remote_arduino_sensor['location_name'], RT, now.isoformat(), now.isoformat())
+            commonFunctions.save_humidity_data(config.remote_arduino_sensor['location_name'], RRH, now.isoformat(), now.isoformat())
+            commonFunctions.save_temperature_data(config.remote_arduino_sensor['location_name'], RT, now.isoformat(), now.isoformat())
             
-            openweathermap_jsondata = get_current_city_data()
-            save_openweather_map_info_to_DB(openweathermap_jsondata, now.isoformat())
-
             time.sleep(60)
     except KeyboardInterrupt:
         print("\nbye!")

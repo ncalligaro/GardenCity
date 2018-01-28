@@ -1,7 +1,7 @@
 #!/usr/bin/python
-import config
-
 from __future__ import print_function
+from config import config
+
 import sys
 #import serial
 import datetime
@@ -37,9 +37,6 @@ MEASUREMENT_TYPE_CLOUDS = 'clouds'
 MEASUREMENT_TYPE_SUNRISE = 'sunrise'
 MEASUREMENT_TYPE_SUNSET = 'sunset'
 
-SAVE_TO_FILE = config.file['save_to_file']
-SAVE_TO_DB = config.mysql['save_to_DB']
-
 def get_from_dic(dictionary, field1, field2 = None):
     if dictionary is None:
         return None
@@ -69,7 +66,7 @@ def save_two_value_record(place, value, second_value, value_type, unit, measurem
 
     sql_sentence = ("INSERT INTO measurement (place,type,value,value2,unit,measurement_date,created_at) VALUES ('%s','%s',%s,'%s','%s',%s,'%s');\n" % (place, value_type, value, second_value, unit, measurement_date, creation_time))
 
-    if (SAVE_TO_FILE):
+    if (config.file['save_to_file']):
         try:
             f = open('%s/temps_%s.log' % (MEASUREMENTS_FOLDER, SCRIPT_START_DATE.strftime(MEASUREMENTS_FILE_SUFFIX)),'a')
             f.write(sql_sentence)
@@ -77,7 +74,7 @@ def save_two_value_record(place, value, second_value, value_type, unit, measurem
         except Error as error:
             error_print("Error saving to file: {}".format(error))
 
-    if (SAVE_TO_DB):
+    if (config.mysql['save_to_DB']):
         db_connection = None
         try:
 

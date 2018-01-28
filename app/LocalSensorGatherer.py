@@ -1,9 +1,9 @@
 #!/usr/bin/python
-import config
+from config import config
 
 import commonFunctions
 
-from __future__ import print_function
+#from __future__ import print_function
 import sys
 import serial
 import datetime
@@ -28,17 +28,16 @@ def get_local_sensor_data():
         return None, None
 
 def main():
-    error_print("Saving to file: %s" % (SAVE_TO_FILE))
-    error_print("Saving to DB: %s" % (SAVE_TO_DB))
-    error_print("Starting loop")
+    commonFunctions.error_print("Saving to file: %s" % (config.file['save_to_file']))
+    commonFunctions.error_print("Saving to DB: %s" % (config.mysql['save_to_DB']))
+    commonFunctions.error_print("Starting loop")
     try:
-        configure_radio()
         while True:
             now = datetime.datetime.utcnow()
 
             LRH, LT = get_local_sensor_data()
-            save_humidity_data(config.local_sensor['location_name'], LRH, now.isoformat(), now.isoformat())
-            save_temperature_data(config.local_sensor['location_name'], LT, now.isoformat(), now.isoformat())
+            commonFunctions.save_humidity_data(config.local_sensor['location_name'], LRH, now.isoformat(), now.isoformat())
+            commonFunctions.save_temperature_data(config.local_sensor['location_name'], LT, now.isoformat(), now.isoformat())
 
             time.sleep(60)
     except KeyboardInterrupt:

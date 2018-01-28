@@ -1,9 +1,9 @@
 #!/usr/bin/python
-import config
+from config import config
 
 import commonFunctions
 
-from __future__ import print_function
+#from __future__ import print_function
 import sys
 import serial
 import datetime
@@ -77,8 +77,8 @@ def get_remote_sensor_data():
     return RH, T
 
 def main():
-    error_print("Saving to file: %s" % (SAVE_TO_FILE))
-    error_print("Saving to DB: %s" % (SAVE_TO_DB))
+    error_print("Saving to file: %s" % (config.file['save_to_file']))
+    error_print("Saving to DB: %s" % (config.mysql['save_to_DB']))
     error_print("Starting loop")
     try:
         configure_radio()

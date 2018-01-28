@@ -1,9 +1,9 @@
 #!/usr/bin/python
-import config
+from config import config
 
 import commonFunctions
 
-from __future__ import print_function
+#from __future__ import print_function
 import sys
 import datetime
 import time
@@ -28,39 +28,39 @@ def get_current_city_data():
     return data
 
 def save_openweather_map_info_to_DB(json_data, creation_time):
-    current_place = get_from_dic(json_data, 'name')
+    current_place = commonFunctions.get_from_dic(json_data, 'name')
     place = "city_%s" % current_place
-    measurement_date = get_from_dic(json_data, 'dt')
+    measurement_date = commonFunctions.get_from_dic(json_data, 'dt')
 
-    current_temperature = get_from_dic(json_data, 'main', 'temp')
-    current_pressure = get_from_dic(json_data, 'main', 'pressure')
-    current_humidity = get_from_dic(json_data, 'main', 'humidity')
-    current_temperature_min = get_from_dic(json_data, 'main', 'temp_min')
-    current_temperature_max = get_from_dic(json_data, 'main', 'temp_max')
-    current_rain = get_from_dic(json_data, 'rain', '3h')
-    current_visibility = get_from_dic(json_data, 'visibility')
-    current_wind_speed = get_from_dic(json_data, 'wind', 'speed')
-    current_wind_direction = get_from_dic(json_data, 'wind', 'deg')
-    current_clouds = get_from_dic(json_data, 'clouds', 'all')
-    current_sunrise = get_from_dic(json_data, 'sys', 'sunrise')
-    current_sunset = get_from_dic(json_data, 'sys', 'sunset')  
+    current_temperature = commonFunctions.get_from_dic(json_data, 'main', 'temp')
+    current_pressure = commonFunctions.get_from_dic(json_data, 'main', 'pressure')
+    current_humidity = commonFunctions.get_from_dic(json_data, 'main', 'humidity')
+    current_temperature_min = commonFunctions.get_from_dic(json_data, 'main', 'temp_min')
+    current_temperature_max = commonFunctions.get_from_dic(json_data, 'main', 'temp_max')
+    current_rain = commonFunctions.get_from_dic(json_data, 'rain', '3h')
+    current_visibility = commonFunctions.get_from_dic(json_data, 'visibility')
+    current_wind_speed = commonFunctions.get_from_dic(json_data, 'wind', 'speed')
+    current_wind_direction = commonFunctions.get_from_dic(json_data, 'wind', 'deg')
+    current_clouds = commonFunctions.get_from_dic(json_data, 'clouds', 'all')
+    current_sunrise = commonFunctions.get_from_dic(json_data, 'sys', 'sunrise')
+    current_sunset = commonFunctions.get_from_dic(json_data, 'sys', 'sunset')  
 
-    save_temperature_data(place, current_temperature, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
-    save_pressure_data(place, current_pressure, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
-    save_humidity_data(place, current_humidity, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
-    save_temperature_range_min_data(place, current_temperature_min, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
-    save_temperature_range_max_data(place, current_temperature_max, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
-    save_rain_data(place, current_rain, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
-    save_visibility_data(place, current_visibility, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
-    save_wind_data(place, current_wind_speed, current_wind_direction, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
-    save_clouds_data(place, current_clouds, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
-    save_sunrise_data(place, current_sunrise, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
-    save_sunset_data(place, current_sunset, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
+    commonFunctions.save_temperature_data(place, current_temperature, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
+    commonFunctions.save_pressure_data(place, current_pressure, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
+    commonFunctions.save_humidity_data(place, current_humidity, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
+    commonFunctions.save_temperature_range_min_data(place, current_temperature_min, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
+    commonFunctions.save_temperature_range_max_data(place, current_temperature_max, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
+    commonFunctions.save_rain_data(place, current_rain, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
+    commonFunctions.save_visibility_data(place, current_visibility, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
+    commonFunctions.save_wind_data(place, current_wind_speed, current_wind_direction, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
+    commonFunctions.save_clouds_data(place, current_clouds, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
+    commonFunctions.save_sunrise_data(place, current_sunrise, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
+    commonFunctions.save_sunset_data(place, current_sunset, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
 
 def main():
-    error_print("Saving to file: %s" % (SAVE_TO_FILE))
-    error_print("Saving to DB: %s" % (SAVE_TO_DB))
-    error_print("Starting loop")
+    commonFunctions.error_print("Saving to file: %s" % (config.file['save_to_file']))
+    commonFunctions.error_print("Saving to DB: %s" % (config.mysql['save_to_DB']))
+    commonFunctions.error_print("Starting loop")
     try:
         while True:
             now = datetime.datetime.utcnow()
