@@ -1,3 +1,5 @@
 app/config/config_*.py
-measurements/*
+app/config/config.py
+**/*.pyc
+**/measurements/*
 doc/*
