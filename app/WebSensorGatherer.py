@@ -68,7 +68,7 @@ def main():
             openweathermap_jsondata = get_current_city_data()
             save_openweather_map_info_to_DB(openweathermap_jsondata, now.isoformat())
 
-            time.sleep(60)
+            time.sleep(60*30)
     except KeyboardInterrupt:
         print("\nbye!")
     except Exception as e:
