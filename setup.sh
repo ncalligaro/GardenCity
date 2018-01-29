@@ -2,7 +2,7 @@
 
 #Setup:
 #pip search mysql
-pip install mysql-connector
+pip install mysql-connector-python
 #If the previous does not work use this instead:
 sudo apt-get -y install python-mysql.connector
 #pip install mysql-connector-python
@@ -12,6 +12,9 @@ cd Adafruit_Python_DHT
 sudo python setup.py install
 cd ..
 rm -r Adafruit_Python_DHT
+
+pip install Flask
+pip install pyping
 
 #mkdir -p ~/.config/systemd/user/
 #cp scripts/gardenCity.service ~/.config/systemd/user/
