@@ -1,33 +1,263 @@
-<!DOCTYPE html>
 <html ng-app="HeaterApp">
-  <head>
-    <title>Heat Control</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="//netdna.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" media="screen">
-    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular.min.js"></script>
-    <script src="{{ url_for('static', filename='main.js') }}"></script>
-    <style>
-      .container {
-        max-width: 1000px;
-      }
-    </style>
-  </head>
-  <body ng-controller="HeaterController">
-    <div class="container">
-      <h1>Heat Control</h1>
-      {% raw %}
-      <div>Current boiler status is: {{boilerStatusLegend}} <div ng-value="boilerStatusLegend"/></div>
-      {% endraw %}
-      <form role="form" ng-submit="toggleBoiler()">
-        <button type="submit" class="btn btn-default">Toggle Boiler</button>
-      </form>
-      <br>
-      {% for error in errors %}
-        <h4>{{ error }}</h4>
-      {% endfor %}
-    </div>
-    <script src="//code.jquery.com/jquery-2.2.1.min.js"></script>
-    <script src="//netdna.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
-  </body>
-</html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!--link rel="icon" href="https://templates.pingendo.com/assets/Pingendo_favicon.ico"-->
+  <title>Heat Control</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" type="text/css">
+  <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular.min.js"></script>
+  <script src="http://code.jquery.com/jquery-3.2.1.js" integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE=" crossorigin="anonymous"></script>
+  <!--script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script-->
+  <!--link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.css') }}" type="text/css"-->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/github.min.css') }}" type="text/css">
+  <!--link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}" type="text/css"-->
+  <!--link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-theme.css') }}" type="text/css"-->
+  <!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/angular-clockpicker.css') }}" type="text/css"> -->
+  <!-- <script src="{{ url_for('static', filename='js/angular-clockpicker.min.js') }}"></script> -->
+  <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment-with-locales.js"></script>
+  <script src="{{ url_for('static', filename='js/angular-moment-picker.js') }}"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/angular-moment-picker.css') }}" type="text/css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+  <script src="{{ url_for('static', filename='main.js') }}"></script>
 
+</head>
+<body ng-controller="HeaterController">
+  {% raw %}
+  <div class="py-5 text-center">
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+          <h1 class="display-3">Heat Control</h1>
+          <p class="lead text-muted">Manage your boiler</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="py-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <ul class="nav nav-pills">
+            <li class="nav-item">
+              <a href="/" class="active nav-link"> <i class="fa fa-home fa-home"></i>&nbsp;Home</a>
+            </li>
+            <!--li class="nav-item">
+              <a class="nav-link" href="#">Item</a>
+            </li>
+            <li class="nav-item">
+              <a href="#" class="nav-link">Item</a>
+            </li-->
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="py-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+          <h2>Current Temperatures</h2>
+          <hr class="mb-4"> 
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-3 p-3">
+          <div class="alert alert-danger">
+            Living Room: 22 C
+          </div>
+        </div>
+        <div class="col-md-3 p-3">
+          <div class="alert alert-success">
+            Bed Room: 19 C
+          </div>
+        </div>
+        <div class="col-md-3 p-3">
+          <div class="alert alert-warning">
+            Kitchen Room: 19.5 C
+          </div>
+        </div>
+        <div class="col-md-3 p-3">
+          <div class="alert alert-info">
+            London Room: 5.1 C
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="py-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+          <h2>Desired Temperatures</h2>
+          <hr class="mb-4"> 
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-3 p-3">
+          <div class="alert alert-info">
+            Living Room: 22 C
+          </div>
+        </div>
+        <div class="col-md-3 p-3">
+          <div class="alert alert-info">
+            Bed Room: 19 C
+          </div>
+        </div>
+        <div class="col-md-3 p-3">
+          <div class="alert alert-info">
+            Kitchen Room: 19.5 C
+          </div>
+        </div>
+        <div class="col-md-3 p-3">
+          <div class="alert alert-info">
+            London Room: 5.1 C
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="py-4" ng-show="errors != null && errors.length != 0">
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+          <div class="alert alert-danger">
+            {{errors}}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="py-4">
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+          <h2>Status</h2>
+          <hr class="mb-4"> 
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12">
+          <div class="alert" ng-class="boilerStatus?'alert-success':'alert-danger'">
+            Current Boiler Status is <strong>{{ getBoilerStatusLegend() }}</strong>
+          </div>
+        </div>
+      </div>
+       <div class="row">
+        <div class="col-12">
+          <div class="alert" ng-class="scheduleOverriden?'alert-success':'alert-danger'">
+            Schedule <strong>{{getScheduleOverridenStatusLegend()}}</strong> overriden
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="py-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+          <h2>Commands</h2>
+          <hr class="mb-4"> </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6 p-3">
+          <div class="form-group my-3">
+            <button type="submit" ng-click="toggleBoiler()" class="btn btn-primary form-control">Toggle Boiler</button>
+            <small class="form-text text-muted">Until next schedule event</small>
+          </div>
+        </div>
+        <div class="col-md-6 p-3">
+          <div class="form-group my-3">
+            <button type="submit" ng-click="toggleScheduleOverriden()" class="btn btn-warning form-control">Override Schedule</button>
+            <small class="form-text text-muted">Until manual release</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="py-6">
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+          <h2>Schedule</h2>
+          <hr class="mb-4"> </div>
+      </div>
+      <div class="row">
+        <div class="col-md-9 p-3">
+          <table class="table table-hover table-striped table-bordered">
+            <thead class="thead-inverse">
+              <tr>
+                <th scope="col">Day</th>
+                <th scope="col">'On' Times</th>
+                <th scope="col">Temp</th>
+                <th scope="col"><span class="glyphicon glyphicon-trash"/></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="schedule in schedules">
+                <td>{{schedule['dayOfWeekName']}}</th>
+                <td>{{schedule['fromTime']}} - {{schedule['toTime']}}</td>
+                <td>{{schedule['targetTemperature']}}</th>
+                <td><span class="glyphicon glyphicon-trash" ng-dblClick="deleteSchedule(schedule)"/></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="col-md-3 p-3">
+          <div class="form-group my-3">
+            <select class="form-control" name="dayOfWeek" ng-model="newSchedule.dayOfWeek">
+              <option value="0">Monday</option>
+              <option value="1">Tuesday</option>
+              <option value="2">Wednesday</option>
+              <option value="3">Thursday</option>
+              <option value="4">Friday</option>
+              <option value="5">Saturday</option>
+              <option value="6">Sunday</option>
+            </select>
+            <small id="fromDateHelp" class="form-text text-muted">Day of the week</small>
+          </div>
+          <div class="form-group mb-3">
+            <div class="input-group" moment-picker="newSchedule.fromTime" format="HH:mm" >
+              <span class="input-group-addon">
+                <i class="glyphicon glyphicon-time"></i>
+              </span>
+              <input type="text" class="form-control" name="fromTime" placeholder="Select start time" ng-model="newSchedule.fromTime">
+            </div>
+            <small id="fromTimeHelp" class="form-text text-muted">Start Time</small>
+          </div>
+          <div class="form-group mb-3">
+            <div class="input-group" moment-picker="newSchedule.toTime" format="HH:mm" >
+              <span class="input-group-addon">
+                <i class="glyphicon glyphicon-time"></i>
+              </span>
+              <input type="text" class="form-control" name="toTime" placeholder="Select end time" ng-model="newSchedule.toTime">
+            </div>
+            <small id="toTimeHelp" class="form-text text-muted">End Time</small>
+          </div>
+          <div class="form-group my-3">
+            <select class="form-control" name="targetTemperature" 
+                ng-model="newSchedule.targetTemperature"
+                ng-change=""
+                ng-options="temperature for temperature in temperatureList">
+            </select>
+
+            <small id="targetTemperatureHelp" class="form-text text-muted">Desired Temperature in Dining Room</small>
+          </div>
+          <button type="submit"  ng-click="addSchedule()" class="btn btn-primary my-2">Add Schedule</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endraw %}
+</body></html>

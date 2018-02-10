@@ -15,7 +15,7 @@ rm -r Adafruit_Python_DHT
 
 pip install Flask
 pip install pyping
-
+pip install tinydb
 #mkdir -p ~/.config/systemd/user/
 #cp scripts/gardenCity.service ~/.config/systemd/user/
 #chmod +x ~/.config/systemd/user/gardenCity.service
