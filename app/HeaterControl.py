@@ -8,7 +8,7 @@ import requests
 from flask import Flask, render_template, request, jsonify
 
 from tinydb import TinyDB, Query
-# import sys
+import sys
 # import serial
 import datetime
 import time
@@ -19,8 +19,7 @@ import time
 import json
 import calendar
 
-import threading
-from multiprocessing import Process
+import thread
 from time import sleep
 import logging
 
@@ -29,8 +28,8 @@ import logging
 # from lib_nrf24 import NRF24
 # import spidev
 logging.basicConfig(level=logging.DEBUG,
-                    format='[%(levelname)s] (%(threadName)-10s) %(message)s',
-                    )
+                    format='%(asctime)s [%(levelname)s] (%(threadName)-10s) %(message)s',
+                    datefmt='%H:%M:%S')
 
 app = Flask(__name__)
 
@@ -94,28 +93,22 @@ def add_doc_id_as_id_to_entry(entry):
     return entry
 
 
-def heater_controller():
-    i=0
+def heater_controller_daemon():
+    logging.debug("Starting Heater Controller Daemon")
+    i = 0
     while(True):
-        sleep(1.0)
         i=i+1
         logging.debug("I'm still running: %s" % i)
+        sleep(1.0)
 
-def web_app():
-    logging.debug("Started Webapp")
-    app.run(threaded=True,debug=True, use_reloader=False)
+def web_app_main():
+    logging.debug("Starting webapp")
+    app.run(debug=True, use_reloader=False)
 
 def main():
-    logging.debug("Starting loop")
-    #Spawn process for webserver
-    #server = Process(target=web_app)
-    #t = threading.Thread(target=web_app, name='web_app')
-    #t.start()
     try:
-        web_app()
-        #server.start()
-        logging.debug("Started Process 2")
-        heater_controller()
+        t = thread.start_new_thread(web_app_main, ())
+        heater_controller_daemon()
     except KeyboardInterrupt:
         logging.debug("\nbye!")
     except Exception as e:
@@ -123,13 +116,10 @@ def main():
         logging.debug (e)
         logging.debug(traceback.format_exc())
     finally:
-        #server.terminate()
-        #server.join()
-        #t.join()
-
-        logging.debug("\nCleaning GPIO port\n")
+        #logging.debug("\nCleaning GPIO port\n")
         # GPIO.cleanup()
-
+        logging.debug("Terminating threads")
+        sys.exit()
 
 # call main
 if __name__ == '__main__':    
