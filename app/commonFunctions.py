@@ -115,7 +115,7 @@ def save_two_value_record(place, value, second_value, value_type, unit, measurem
 def save_heater_record(state, reason, reason_explanation, measurement_date, creation_time):
     measurement_date = fix_measurement_date(measurement_date)
 
-    sql_sentence = ("INSERT INTO heater (state,reason,reason_explanation,measurement_date,created_at) VALUES ('%s','%s',%s,%s,'%s');\n" % (state, reason, reason_explanation, measurement_date, creation_time))
+    sql_sentence = ("INSERT INTO heater (state,reason,reason_explanation,measurement_date,created_at) VALUES ('%s','%s','%s',%s,'%s');\n" % (state, reason, reason_explanation, measurement_date, creation_time))
 
     if (config.file['save_to_file']):
         try:
