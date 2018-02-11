@@ -60,7 +60,6 @@
       $scope.getBoilerStatus = function() {
           $http.get('/heater/status')
           .success(function(response){
-            console.log(response);
             $scope.isBoilerOn = response.isBoilerOn;
             $scope.isScheduleOverriden = response.isScheduleOverriden;
           })

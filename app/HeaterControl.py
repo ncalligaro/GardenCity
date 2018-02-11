@@ -7,16 +7,17 @@ import os
 import requests
 from flask import Flask, render_template, request, jsonify
 
-from tinydb import TinyDB, Query
+from tinydb import TinyDB, Query, where
 # import serial
 import datetime
 import time
 # import re
-# import traceback
+import traceback
 # import httplib
 # import urllib
 import json
 import calendar
+from decimal import Decimal
 
 import threading
 from time import sleep
@@ -56,14 +57,16 @@ def get_heater_schedule():
 
 @app.route('/heater/schedule', methods=['POST'])
 def add_heater_schedule():
-    day_of_week = request.json['dayOfWeek']
+    day_of_week = int(request.json['dayOfWeek'])
     from_time = request.json['fromTime']
+    from_time_decimal = convert_time_to_integer(from_time)
     to_time = request.json['toTime']
-    target_temperature = request.json['targetTemperature']
-    day_of_week_name = calendar.day_name[int(day_of_week)]
+    to_time_decimal = convert_time_to_integer(to_time)
+    target_temperature = int(request.json['targetTemperature'])
+    day_of_week_name = calendar.day_name[day_of_week]
 
     if (day_of_week is not None and from_time is not None and to_time is not None and target_temperature is not None):
-        new_id = schedule_table.insert({'dayOfWeek' : day_of_week, 'dayOfWeekName': day_of_week_name, 'fromTime': from_time, 'toTime': to_time, 'targetTemperature': target_temperature })
+        new_id = schedule_table.insert({'dayOfWeek' : day_of_week, 'dayOfWeekName': day_of_week_name, 'fromTime': from_time, 'fromTimeDecimal': from_time_decimal, 'toTime': to_time, 'toTimeDecimal': to_time_decimal, 'targetTemperature': target_temperature })
         new_schedule = schedule_table.get(doc_id=new_id)
         return jsonify(new_schedule)
     else:
@@ -98,7 +101,23 @@ def get_boiler_text_value_for(value):
     return 'off'
 
 def get_scheduled_boiler_status():
-    return False
+    now = datetime.datetime.now()
+    today_day_of_week = now.weekday()
+    current_integer_time = convert_time_to_integer("%s:%s" % (now.hour, now.minute))
+    #schedule_query = Query()
+    #schedule_table.search(schedule_query.dayOfWeek.test(test_func, 0, 21))
+    todays_schedules = schedule_table.search((where('dayOfWeek') == today_day_of_week) & (where('fromTimeDecimal') <= current_integer_time) & (where('toTimeDecimal') > current_integer_time))
+    #todays_schedules = schedule_table.search((where('fromTimeDecimal') <= current_integer_time) & (where('toTimeDecimal') > current_integer_time))
+    #logging.debug(jsonify(todays_schedules))
+    return not not todays_schedules
+
+
+def convert_time_to_integer(time_record):
+    (h, m) = time_record.split(':')
+    return int(h)*100 + int(m)
+    
+# def isHourBetween(val, min, max):
+#     return min <= val < max
 
 def calculate_new_boiler_state():
     state = {}
