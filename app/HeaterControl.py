@@ -27,7 +27,11 @@ import logging
 # import RPi.GPIO as GPIO
 # from lib_nrf24 import NRF24
 # import spidev
-logging.basicConfig(level=logging.DEBUG,
+logging_level = logging.INFO
+if config.runtime_variables['debug']:
+    logging_level = logging.DEBUG
+    
+logging.basicConfig(level=logging_level,
                     format='%(asctime)s [%(levelname)s] (%(threadName)-10s) %(message)s',
                     datefmt='%H:%M:%S')
 
@@ -162,20 +166,20 @@ def calculate_new_boiler_state():
     return state, reason, reason_explanation
 
 def heater_controller_daemon():
-    logging.debug("Starting Heater Controller Daemon")
+    logging.info("Starting Heater Controller Daemon")
     while(True):
         state, reason, reason_explanation = calculate_new_boiler_state()
         state['text_value'] = get_boiler_text_value_for(state['is_boiler_on'])
 
         now = datetime.datetime.utcnow()
 
-        #commonFunctions.save_heater_data(state['text_value'], reason, reason_explanation, now.isoformat(), now.isoformat()):
+        commonFunctions.save_heater_data(state['text_value'], reason, reason_explanation, now.isoformat(), now.isoformat())
         boiler_status['is_boiler_on'] = state['is_boiler_on']
         logging.debug("is_boiler_on: %s | is_schedule_overriden: %s | is_temporarily_overriden: %s | last_scheduled_value: %s" % (boiler_status['is_boiler_on'], boiler_status['is_schedule_overriden'], boiler_status['is_temporarily_overriden'], boiler_status['last_scheduled_value']))
-        sleep(5.0)
+        sleep(60.0)
 
 def web_app_main():
-    logging.debug("Starting webapp")
+    logging.info("Starting webapp")
     debug = logging.getLogger().isEnabledFor(logging.DEBUG)
     app.run(debug=debug, use_reloader=False, host="0.0.0.0")
 
@@ -196,7 +200,7 @@ def main():
     finally:
         #logging.debug("\nCleaning GPIO port\n")
         # GPIO.cleanup()
-        logging.debug("Shutting Down")
+        logging.info("Shutting Down")
 
 # call main
 if __name__ == '__main__':    
