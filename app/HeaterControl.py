@@ -27,13 +27,10 @@ import logging
 # import RPi.GPIO as GPIO
 # from lib_nrf24 import NRF24
 # import spidev
-logging_level = logging.INFO
-if config.runtime_variables['debug']:
-    logging_level = logging.DEBUG
-    
-logging.basicConfig(level=logging_level,
-                    format='%(asctime)s [%(levelname)s] (%(threadName)-10s) %(message)s',
-                    datefmt='%H:%M:%S')
+
+logging.basicConfig(level=config.get_logging_level(),
+                    format=config.runtime_variables['log_format'],
+                    datefmt=config.runtime_variables['log_date_format'])
 
 app = Flask(__name__)
 
@@ -176,12 +173,12 @@ def heater_controller_daemon():
         commonFunctions.save_heater_data(state['text_value'], reason, reason_explanation, now.isoformat(), now.isoformat())
         boiler_status['is_boiler_on'] = state['is_boiler_on']
         logging.debug("is_boiler_on: %s | is_schedule_overriden: %s | is_temporarily_overriden: %s | last_scheduled_value: %s" % (boiler_status['is_boiler_on'], boiler_status['is_schedule_overriden'], boiler_status['is_temporarily_overriden'], boiler_status['last_scheduled_value']))
-        sleep(60.0)
+        sleep(config.runtime_variables['sleep_time_in_seconds_between_reads'])
 
 def web_app_main():
     logging.info("Starting webapp")
     debug = logging.getLogger().isEnabledFor(logging.DEBUG)
-    app.run(debug=debug, use_reloader=False, host="0.0.0.0")
+    app.run(debug=debug, use_reloader=False, host=config.webapp['listening_ip'])
 
 def main():
     try:

@@ -8,6 +8,7 @@ import commonFunctions
 # import serial
 import datetime
 import time
+import logging
 # import re
 import traceback
 # import json
@@ -17,6 +18,11 @@ import traceback
 import pyping
 # Note, does not work because both android and iphone stop responding to pings after a little while of being on standby
 
+
+logging.basicConfig(level=config.get_logging_level(),
+                    format=config.runtime_variables['log_format'],
+                    datefmt=config.runtime_variables['log_date_format'])
+
 def get_local_presence_data(location_name, presence_name):
     ip = ''
     if presence_name == 'Nico':
@@ -24,13 +30,13 @@ def get_local_presence_data(location_name, presence_name):
     if presence_name == 'Flor':
         ip = "192.168.0.31"
     response = pyping.ping(ip)
-    print (presence_name + ' ' + str(response.ret_code))
+    logging.debug (presence_name + ' ' + str(response.ret_code))
     return (response.ret_code == 0); #0 = reachable, other is unreachable
 
 def main():
-    commonFunctions.error_print("Saving to file: %s" % (config.file['save_to_file']))
-    commonFunctions.error_print("Saving to DB: %s" % (config.mysql['save_to_DB']))
-    commonFunctions.error_print("Starting loop")
+    logging.info("Saving to file: %s" % (config.file['save_to_file']))
+    logging.info("Saving to DB: %s" % (config.mysql['save_to_DB']))
+    logging.info("Starting loop")
     try:
         while True:
             now = datetime.datetime.utcnow()
@@ -41,15 +47,15 @@ def main():
             commonFunctions.save_presence_data('Home', 'Nico', nico, now.isoformat(), now.isoformat())
             commonFunctions.save_presence_data('Home', 'Flor', flor, now.isoformat(), now.isoformat())
 
-            time.sleep(5)
+            sleep(config.presence_sensor['sleep_time_in_seconds_between_reads'])
     except KeyboardInterrupt:
-        print("\nbye!")
+        logging.debug("\nbye!")
     except Exception as e:
-        print("\nOther error occurred")
-        print (e)
-        print(traceback.format_exc())
+        logging.debug("\nOther error occurred")
+        logging.debug (e)
+        logging.debug(traceback.format_exc())
     finally:
-        print("\nBye 2!\n")
+        logging.info("\nBye 2!\n")
 
 # call main
 if __name__ == '__main__':

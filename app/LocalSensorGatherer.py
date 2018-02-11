@@ -11,12 +11,17 @@ import time
 import re
 import traceback
 import json
+import logging
 
 import sys
 import RPi.GPIO as GPIO
 #import spidev
 
 import Adafruit_DHT
+
+logging.basicConfig(level=config.get_logging_level(),
+                    format=config.runtime_variables['log_format'],
+                    datefmt=config.runtime_variables['log_date_format'])
 
 GPIO.setmode(GPIO.BCM)
 
@@ -28,9 +33,9 @@ def get_local_sensor_data():
         return None, None
 
 def main():
-    commonFunctions.error_print("Saving to file: %s" % (config.file['save_to_file']))
-    commonFunctions.error_print("Saving to DB: %s" % (config.mysql['save_to_DB']))
-    commonFunctions.error_print("Starting loop")
+    logging.info("Saving to file: %s" % (config.file['save_to_file']))
+    logging.info("Saving to DB: %s" % (config.mysql['save_to_DB']))
+    logging.info("Starting loop")
     try:
         while True:
             now = datetime.datetime.utcnow()
@@ -39,15 +44,15 @@ def main():
             commonFunctions.save_humidity_data(config.local_sensor['location_name'], LRH, now.isoformat(), now.isoformat())
             commonFunctions.save_temperature_data(config.local_sensor['location_name'], LT, now.isoformat(), now.isoformat())
 
-            time.sleep(60)
+            sleep(config.local_sensor['sleep_time_in_seconds_between_reads'])
     except KeyboardInterrupt:
-        print("\nbye!")
+        logging.debug("\nbye!")
     except Exception as e:
-        print("\nOther error occurred")
-        print (e)
-        print(traceback.format_exc())
+        logging.debug("\nOther error occurred")
+        logging.debug (e)
+        logging.debug(traceback.format_exc())
     finally:
-        print("\nCleaning GPIO port\n")
+        logging.info("\nCleaning GPIO port\n")
         GPIO.cleanup()
 
 # call main

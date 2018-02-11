@@ -13,6 +13,11 @@ import httplib
 import urllib
 import json
 import sys
+import logging
+
+logging.basicConfig(level=config.get_logging_level(),
+                    format=config.runtime_variables['log_format'],
+                    datefmt=config.runtime_variables['log_date_format'])
 
 def get_current_city_data():
     http_connection = httplib.HTTPSConnection(config.open_map['host'])
@@ -58,9 +63,9 @@ def save_openweather_map_info_to_DB(json_data, creation_time):
     commonFunctions.save_sunset_data(place, current_sunset, "FROM_UNIXTIME(%s)" % (measurement_date), creation_time)
 
 def main():
-    commonFunctions.error_print("Saving to file: %s" % (config.file['save_to_file']))
-    commonFunctions.error_print("Saving to DB: %s" % (config.mysql['save_to_DB']))
-    commonFunctions.error_print("Starting loop")
+    logging.info("Saving to file: %s" % (config.file['save_to_file']))
+    logging.info("Saving to DB: %s" % (config.mysql['save_to_DB']))
+    logging.info("Starting loop")
     try:
         while True:
             now = datetime.datetime.utcnow()
@@ -68,15 +73,15 @@ def main():
             openweathermap_jsondata = get_current_city_data()
             save_openweather_map_info_to_DB(openweathermap_jsondata, now.isoformat())
 
-            time.sleep(60*30)
+            sleep(config.open_map['sleep_time_in_seconds_between_reads'])
     except KeyboardInterrupt:
-        print("\nbye!")
+        logging.debug("\nbye!")
     except Exception as e:
-        print("\nOther error occurred")
-        print (e)
-        print(traceback.format_exc())
+        logging.debug("\nOther error occurred")
+        logging.debug (e)
+        logging.debug(traceback.format_exc())
     finally:
-        print("\nbye2!")
+        logging.info("\nbye2!")
         #print("\nCleaning GPIO port\n")
         #GPIO.cleanup()
 
