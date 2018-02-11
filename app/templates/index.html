@@ -151,11 +151,16 @@
           </div>
         </div>
       </div>
-       <div class="row">
+      <div class="row">
         <div class="col-12">
           <div class="alert" ng-class="isScheduleOverriden?'alert-success':'alert-danger'">
             Schedule <strong>{{getIsScheduleOverridenStatusLegend()}}</strong> overriden
           </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12">
+          <button type="submit" ng-click="getBoilerStatus()" class="btn btn-primary form-control">Refresh Now</button>
         </div>
       </div>
     </div>

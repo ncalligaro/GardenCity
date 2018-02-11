@@ -32,7 +32,7 @@ logging.basicConfig(level=logging.DEBUG,
 
 app = Flask(__name__)
 
-boiler_status = {'isBoilerOn': False, 'isScheduleOverriden': False}
+boiler_status = {'is_boiler_on': False, 'is_schedule_overriden': False, 'is_temporarily_overriden': False, 'last_scheduled_value': False}
 
 
 #list(calendar.day_name)
@@ -76,26 +76,83 @@ def delete_heater_schedule(id):
 
 @app.route('/heater/status', methods=['PUT'])
 def set_heater_status():
-    boiler_status['isBoilerOn'] = request.json['isBoilerOn']
-    boiler_status['isScheduleOverriden'] = request.json['isScheduleOverriden']
-    return jsonify(boiler_status)
+    boiler_status['is_boiler_on'] = request.json['isBoilerOn']
+    boiler_status['is_temporarily_overriden'] = True
+    boiler_status['is_schedule_overriden'] = request.json['isScheduleOverriden']
+    return get_heater_status()
 
 @app.route('/heater/status', methods=['GET'])
 def get_heater_status():
-    return jsonify(boiler_status)
+    boiler_status_response = {}
+    boiler_status_response['isBoilerOn'] = boiler_status['is_boiler_on']
+    boiler_status_response['isScheduleOverriden'] = boiler_status['is_schedule_overriden']
+    return jsonify(boiler_status_response)
 
 def add_doc_id_as_id_to_entry(entry):
     entry['object_id'] = entry.doc_id
     return entry
 
+def get_boiler_text_value_for(value):
+    if value:
+        return 'on'
+    return 'off'
+
+def get_scheduled_boiler_status():
+    return False
+
+def calculate_new_boiler_state():
+    state = {}
+    state['is_boiler_on'] = True
+    reason = '0'
+    reason_explanation = 'Unknown reason'
+    logging.debug("Calculating new boiler state")
+
+    # If it is fully overriden then return current value
+    if boiler_status['is_schedule_overriden']:
+        state['is_boiler_on'] = boiler_status['is_boiler_on']
+        reason = '1'
+        reason_explanation = 'Schedule overriden. Returned current value'
+        logging.debug("%s. Value is %s " % (reason_explanation, state['is_boiler_on']))
+        return state, reason, reason_explanation
+
+    # If it is NOT fully overriden then it might be temporarily overriden
+    scheduled_boiler_status = get_scheduled_boiler_status()
+    if boiler_status['is_temporarily_overriden']:
+        if boiler_status['last_scheduled_value'] != scheduled_boiler_status:
+            # Last boiler status is not the same as the new one and it is temporarily overriden so change it!
+            boiler_status['last_scheduled_value'] = scheduled_boiler_status
+            boiler_status['is_temporarily_overriden'] = False
+            state['is_boiler_on'] = scheduled_boiler_status
+            reason = '2'
+            reason_explanation = 'Schedule temporarily overriden but scheduled value changed. Returned new value'
+            logging.debug("%s. Value is %s " % (reason_explanation, state['is_boiler_on']))
+            return state, reason, reason_explanation
+        # Last boiler status is the same so lets keep the current value because it is temporarily overriden
+        state['is_boiler_on'] = boiler_status['is_boiler_on']
+        reason = '3'
+        reason_explanation = 'Schedule temporarily overriden but scheduled value has not changed. Returned previous value'
+        logging.debug("%s. Value is %s " % (reason_explanation, state['is_boiler_on']))
+        return state, reason, reason_explanation
+
+    # There was no override so lets follow the schedule
+    state['is_boiler_on'] = scheduled_boiler_status
+    boiler_status['last_scheduled_value'] = scheduled_boiler_status
+    reason = '4'
+    reason_explanation = 'Following schedule. Returned schedule''s value'
+    logging.debug("%s. Value is %s " % (reason_explanation, state['is_boiler_on']))
+    return state, reason, reason_explanation
 
 def heater_controller_daemon():
     logging.debug("Starting Heater Controller Daemon")
-    i = 0
     while(True):
-        i=i+1
-        logging.debug("I'm still running: %s" % i)
-        logging.debug("isBoilerOn: %s | isScheduleOverriden: %s" % (boiler_status['isBoilerOn'], boiler_status['isScheduleOverriden']))
+        state, reason, reason_explanation = calculate_new_boiler_state()
+        state['text_value'] = get_boiler_text_value_for(state['is_boiler_on'])
+
+        now = datetime.datetime.utcnow()
+
+        #commonFunctions.save_heater_data(state['text_value'], reason, reason_explanation, now.isoformat(), now.isoformat()):
+        boiler_status['is_boiler_on'] = state['is_boiler_on']
+        logging.debug("is_boiler_on: %s | is_schedule_overriden: %s | is_temporarily_overriden: %s | last_scheduled_value: %s" % (boiler_status['is_boiler_on'], boiler_status['is_schedule_overriden'], boiler_status['is_temporarily_overriden'], boiler_status['last_scheduled_value']))
         sleep(5.0)
 
 def web_app_main():
@@ -105,6 +162,8 @@ def web_app_main():
 
 def main():
     try:
+        commonFunctions.error_print("Saving to file: %s" % (config.file['save_to_file']))
+        commonFunctions.error_print("Saving to DB: %s" % (config.mysql['save_to_DB']))
         t = threading.Thread(name='web_app_main',target=web_app_main)
         t.setDaemon(True)
         t.start()
