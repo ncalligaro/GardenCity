@@ -18,7 +18,6 @@ import traceback
 import pyping
 # Note, does not work because both android and iphone stop responding to pings after a little while of being on standby
 
-
 logging.basicConfig(level=config.get_logging_level(),
                     format=config.runtime_variables['log_format'],
                     datefmt=config.runtime_variables['log_date_format'])
