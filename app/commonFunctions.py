@@ -7,7 +7,7 @@ import sys
 import datetime
 import time
 import re
-#import traceback
+import traceback
 #import httplib
 #import urllib
 #import json
@@ -20,6 +20,12 @@ import sys
 #import spidev
 
 #import Adafruit_DHT
+
+import logging
+
+logging.basicConfig(level=config.get_logging_level(),
+                    format=config.runtime_variables['log_format'],
+                    datefmt=config.runtime_variables['log_date_format'])
 
 SCRIPT_START_DATE = datetime.datetime.utcnow()
 MEASUREMENTS_FOLDER = config.file['path']
@@ -50,9 +56,12 @@ def get_from_dic(dictionary, field1, field2 = None):
 
 def connect_to_db():
     try:
-        return mariadb.connect(user=config.mysql['user'], password=config.mysql['password'], host=config.mysql['host'], database=config.mysql['database'])
+        #Need to remove this key because it's a custom one and mysql connector complains otherwise
+        mysql_config = config.mysql.copy()
+        del mysql_config['save_to_DB']
+        return mariadb.connect(**mysql_config)
     except mariadb.Error as error:
-        error_print("Error opening connection to DB: {}".format(error))
+        logging.debug("Error opening connection to DB: {}".format(error))
         raise
 
 def fix_measurement_date(measurement_date):
@@ -77,7 +86,7 @@ def save_two_value_record(place, value, second_value, value_type, unit, measurem
             f.write(sql_sentence)
             f.close()
         except IOError as error:
-            error_print("Error saving to file: {}".format(error))
+            logging.debug("Error saving to file: {}".format(error))
 
     if (config.mysql['save_to_DB']):
         db_connection = None
@@ -95,19 +104,19 @@ def save_two_value_record(place, value, second_value, value_type, unit, measurem
             #    second_value_query = "1=1"
             #query_sentence = ("SELECT * FROM measurement where place = '%s' AND type = '%s' AND measurement_date = %s and value = %s AND %s" % (place, value_type, measurement_date, value, second_value_query))
             query_sentence = ("SELECT * FROM measurement where place = '%s' AND type = '%s' AND measurement_date = %s" % (place, value_type, measurement_date))
-            #error_print("query_sentence: %s" % query_sentence)
+            #logging.debug("query_sentence: %s" % query_sentence)
             cursor.execute(query_sentence)
             cursor.fetchall()
-            #error_print(cursor.rowcount)
+            #logging.debug(cursor.rowcount)
             if int(cursor.rowcount) == 0:
                 cursor.close()
                 cursor = db_connection.cursor()
                 cursor.execute(sql_sentence)
                 db_connection.commit()
             #else:
-                #error_print("Values already exist in DB: %s" % sql_sentence)
+                #logging.debug("Values already exist in DB: %s" % sql_sentence)
         except mariadb.Error as error:
-            error_print("Error saving to DB: {}".format(error))
+            logging.debug("Error saving to DB: {}".format(error))
         finally:
             if db_connection is not None:
                 db_connection.close()
@@ -123,7 +132,7 @@ def save_heater_record(state, reason, reason_explanation, measurement_date, crea
             f.write(sql_sentence)
             f.close()
         except IOError as error:
-            error_print("Error saving to file: {}".format(error))
+            logging.debug("Error saving to file: {}".format(error))
 
     if (config.mysql['save_to_DB']):
         db_connection = None
@@ -140,7 +149,7 @@ def save_heater_record(state, reason, reason_explanation, measurement_date, crea
             cursor.execute(sql_sentence)
             db_connection.commit()
         except mariadb.Error as error:
-            error_print("Error saving to DB: {}".format(error))
+            logging.debug("Error saving to DB: {}".format(error))
         finally:
             if db_connection is not None:
                 db_connection.close()
@@ -156,7 +165,7 @@ def save_presence_record(place, person, presence, measurement_date, creation_tim
             f.write(sql_sentence)
             f.close()
         except IOError as error:
-            error_print("Error saving to file: {}".format(error))
+            logging.debug("Error saving to file: {}".format(error))
 
     if (config.mysql['save_to_DB']):
         db_connection = None
@@ -174,10 +183,87 @@ def save_presence_record(place, person, presence, measurement_date, creation_tim
                 cursor.execute(sql_sentence)
                 db_connection.commit()
         except mariadb.Error as error:
-            error_print("Error saving to DB: {}".format(error))
+            logging.debug("Error saving to DB: {}".format(error))
         finally:
             if db_connection is not None:
                 db_connection.close()
+
+def fetch_one_record_as_dictionary(cursor):
+    data = cursor.fetchone()
+    if data == None:
+        return None
+    desc = cursor.description
+
+    dict = {}
+
+    for (name, value) in zip(desc, data):
+        dict[name[0]] = value
+
+    return dict
+
+def get_last_measurement_for_place(value_type, place, max_age_in_mins):
+    if place is None or value_type is None:
+        return None
+    if max_age_in_mins is None:
+        max_age_in_mins = 15
+
+    db_connection = None
+    cursor = None
+    try:
+        db_connection = connect_to_db()
+        cursor = db_connection.cursor()
+        
+        #Only get values from last X minutes
+        query_sentence = ("SELECT value, measurement_date FROM measurement WHERE place = '%s' AND type = '%s' AND measurement_date > (now() - INTERVAL %s MINUTE) ORDER BY measurement_date DESC LIMIT 1" % (place, value_type, max_age_in_mins))
+        
+        cursor.execute(query_sentence)
+        record = fetch_one_record_as_dictionary(cursor)
+
+        if record is None:
+            return None, None
+
+        return record['value'], record['measurement_date']
+    except mariadb.Error as error:
+        logging.debug("Error executing DB query: {}".format(error))
+        logging.debug (error)
+        logging.debug(traceback.format_exc())
+        return None, None
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if db_connection is not None:
+            db_connection.close()
+ 
+def get_places_for_type(measurement_type):
+    if measurement_type is None:
+        return None
+
+    db_connection = None
+    cursor = None
+    try:
+        db_connection = connect_to_db()
+        cursor = db_connection.cursor()
+        
+        #Only get values from last X minutes
+        query_sentence = ("SELECT distinct(place) FROM measurement WHERE type = '%s'" % (measurement_type))
+        
+        cursor.execute(query_sentence)
+        records = cursor.fetchall()
+
+        if records is None:
+            return []
+
+        return records
+    except mariadb.Error as error:
+        logging.debug("Error executing DB query: {}".format(error))
+        logging.debug (error)
+        logging.debug(traceback.format_exc())
+        return None, None
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if db_connection is not None:
+            db_connection.close()
 
 def save_measurement_record(place, value, value_type, unit, measurement_date, creation_time):
     save_two_value_record(place, value, None, value_type, unit, measurement_date, creation_time)
@@ -233,7 +319,4 @@ def save_presence_data(place, person, presence, measurement_date, creation_time)
 def save_heater_data(state, reason, reason_explanation, measurement_date, creation_time):
     if state is not None and reason is not None and measurement_date is not None:
         save_heater_record(state, reason, reason_explanation, measurement_date, creation_time)
-
-def error_print(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
 
