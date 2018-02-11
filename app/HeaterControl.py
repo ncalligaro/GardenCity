@@ -8,7 +8,6 @@ import requests
 from flask import Flask, render_template, request, jsonify
 
 from tinydb import TinyDB, Query
-import sys
 # import serial
 import datetime
 import time
@@ -19,7 +18,7 @@ import time
 import json
 import calendar
 
-import thread
+import threading
 from time import sleep
 import logging
 
@@ -33,7 +32,8 @@ logging.basicConfig(level=logging.DEBUG,
 
 app = Flask(__name__)
 
-heater_is_on = False
+boiler_status = {'isBoilerOn': False, 'isScheduleOverriden': False}
+
 
 #list(calendar.day_name)
 #['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
@@ -74,19 +74,15 @@ def delete_heater_schedule(id):
     schedule_table.remove(doc_ids=[int(id)])
     return ''
 
+@app.route('/heater/status', methods=['PUT'])
+def set_heater_status():
+    boiler_status['isBoilerOn'] = request.json['isBoilerOn']
+    boiler_status['isScheduleOverriden'] = request.json['isScheduleOverriden']
+    return jsonify(boiler_status)
+
 @app.route('/heater/status', methods=['GET'])
 def get_heater_status():
-    errors = []
-    results = {}
-    try:
-        url = request.form['url']
-        r = requests.get(url)
-        logging.debug(r.text)
-    except:
-        errors.append(
-            "Unable to get URL. Please make sure it's valid and try again."
-        )
-    return render_template('index.html', errors=errors, results=results)
+    return jsonify(boiler_status)
 
 def add_doc_id_as_id_to_entry(entry):
     entry['object_id'] = entry.doc_id
@@ -99,27 +95,30 @@ def heater_controller_daemon():
     while(True):
         i=i+1
         logging.debug("I'm still running: %s" % i)
-        sleep(1.0)
+        logging.debug("isBoilerOn: %s | isScheduleOverriden: %s" % (boiler_status['isBoilerOn'], boiler_status['isScheduleOverriden']))
+        sleep(5.0)
 
 def web_app_main():
     logging.debug("Starting webapp")
-    app.run(debug=True, use_reloader=False)
+    debug = logging.getLogger().isEnabledFor(logging.DEBUG)
+    app.run(debug=debug, use_reloader=False, host="0.0.0.0")
 
 def main():
     try:
-        t = thread.start_new_thread(web_app_main, ())
+        t = threading.Thread(name='web_app_main',target=web_app_main)
+        t.setDaemon(True)
+        t.start()
         heater_controller_daemon()
     except KeyboardInterrupt:
-        logging.debug("\nbye!")
+        logging.debug("bye!")
     except Exception as e:
-        logging.debug("\nOther error occurred")
+        logging.debug("Other error occurred")
         logging.debug (e)
         logging.debug(traceback.format_exc())
     finally:
         #logging.debug("\nCleaning GPIO port\n")
         # GPIO.cleanup()
-        logging.debug("Terminating threads")
-        sys.exit()
+        logging.debug("Shutting Down")
 
 # call main
 if __name__ == '__main__':    

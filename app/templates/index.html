@@ -146,15 +146,15 @@
       </div>
       <div class="row">
         <div class="col-12">
-          <div class="alert" ng-class="boilerStatus?'alert-success':'alert-danger'">
-            Current Boiler Status is <strong>{{ getBoilerStatusLegend() }}</strong>
+          <div class="alert" ng-class="isBoilerOn?'alert-success':'alert-danger'">
+            Current Boiler Status is <strong>{{ getIsBoilerOnLegend() }}</strong>
           </div>
         </div>
       </div>
        <div class="row">
         <div class="col-12">
-          <div class="alert" ng-class="scheduleOverriden?'alert-success':'alert-danger'">
-            Schedule <strong>{{getScheduleOverridenStatusLegend()}}</strong> overriden
+          <div class="alert" ng-class="isScheduleOverriden?'alert-success':'alert-danger'">
+            Schedule <strong>{{getIsScheduleOverridenStatusLegend()}}</strong> overriden
           </div>
         </div>
       </div>
@@ -177,7 +177,7 @@
         </div>
         <div class="col-md-6 p-3">
           <div class="form-group my-3">
-            <button type="submit" ng-click="toggleScheduleOverriden()" class="btn btn-warning form-control">Override Schedule</button>
+            <button type="submit" ng-click="toggleisScheduleOverriden()" class="btn btn-warning form-control">Override Schedule</button>
             <small class="form-text text-muted">Until manual release</small>
           </div>
         </div>
