@@ -3,4 +3,5 @@ app/config/config.py
 **/*.pyc
 **/measurements/*
 doc/*
-app/db.json
+app/db.json*
+db/*BKP*
