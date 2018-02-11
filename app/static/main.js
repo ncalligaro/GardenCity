@@ -11,6 +11,60 @@
       $scope.schedules = [];
       $scope.newSchedule = { 'fromTime':'09:00', 'toTime':'10:00', 'dayOfWeek':'2', 'targetTemperature': '19' };
       $scope.temperatureList = [];
+      $scope.currentTemperatures = [];
+      $scope.availablePlaces = ['Room','Dining','city_London','Kitchen'];
+
+      $scope.fetchPlaces = function() {
+        $http.get('/places/temperature')
+          .success(function(response){
+            $scope.availablePlaces = response.map(function(elem){
+              return elem[0];
+            });
+            $scope.fetchCurrentTemperatures();
+          })
+      };
+
+      $scope.getAlertTypeForTemperatureRange = function(temperature) {
+        if (temperature < 10) {
+          return "alert-info";
+        }
+        if (temperature >= 10 && temperature < 18) {
+          return "alert-danger";
+        }
+        if (temperature >= 18 && temperature < 19) {
+          return "alert-warning";
+        }
+        if (temperature >= 19 && temperature < 20) {
+          return "alert-success";
+        }
+        if (temperature >= 20 && temperature < 22) {
+          return "alert-warning";
+        }
+        if (temperature >= 22) {
+          return "alert-danger";
+        }
+        return "alert-danger";
+      };
+
+      $scope.fetchCurrentTemperatures = function() {
+        for (var i = 0; i < $scope.availablePlaces.length; i++){
+          $scope.fetchAndStoreTemperature($scope.availablePlaces[i]);
+        }
+      };
+
+      $scope.fetchAndStoreTemperature = function(place){
+        var maxAge = 5;
+        if (place == 'city_London'){
+          maxAge = 60;
+        }
+        $http({url:'/temperature/' + place,
+               method: 'GET',
+               params: {'maxAge': maxAge}})
+          .success(function(response){
+            $scope.currentTemperatures[place] = response;
+            $scope.currentTemperatures[place].roundedTemperature = Math.trunc(response.temperature*100)/100;
+          })
+      };
 
       $scope.getSchedules = function() {
         $http.get('/heater/schedule')
@@ -93,8 +147,10 @@
       $scope.fillTemperatureList();
       $scope.getSchedules();
       $scope.getBoilerStatus();
+      $scope.fetchPlaces();
       setInterval(function(){
         $scope.getBoilerStatus();
+        $scope.fetchCurrentTemperatures();
       }, 10000);
     }
   ]);

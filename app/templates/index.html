@@ -56,7 +56,6 @@
       </div>
     </div>
   </div>
-
   <div class="py-5">
     <div class="container">
       <div class="row">
@@ -66,24 +65,9 @@
         </div>
       </div>
       <div class="row">
-        <div class="col-md-3 p-3">
-          <div class="alert alert-danger">
-            Living Room: 22 C
-          </div>
-        </div>
-        <div class="col-md-3 p-3">
-          <div class="alert alert-success">
-            Bed Room: 19 C
-          </div>
-        </div>
-        <div class="col-md-3 p-3">
-          <div class="alert alert-warning">
-            Kitchen Room: 19.5 C
-          </div>
-        </div>
-        <div class="col-md-3 p-3">
-          <div class="alert alert-info">
-            London Room: 5.1 C
+        <div class="col-md-3 p-3" ng-repeat="place in availablePlaces">
+          <div class="alert" ng-class="getAlertTypeForTemperatureRange(currentTemperatures[place].temperature)">
+            {{place}}: {{currentTemperatures[place].roundedTemperature}} C
           </div>
         </div>
       </div>
@@ -91,7 +75,7 @@
   </div>
 
 
-  <div class="py-5">
+  <!--div class="py-5" style=>
     <div class="container">
       <div class="row">
         <div class="col-12">
@@ -122,7 +106,7 @@
         </div>
       </div>
     </div>
-  </div>
+  </div-->
 
   <div class="py-4" ng-show="errors != null && errors.length != 0">
     <div class="container">

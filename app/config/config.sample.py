@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import logging
 
 mysql = { 'host': '',
           'user': '',
@@ -13,8 +14,6 @@ file = { 'save_to_file': True,
     		 'path' : 'someFolderWithinCurrentPWD',
           }
 
-
-
 open_map = { 'host': 'api.openweathermap.org',
              'path': '/data/2.5/weather',
              'api_key': '',
@@ -27,6 +26,9 @@ local_sensor = { 'gpio_port': 23,
                  'sleep_time_in_seconds_between_reads': 60.0,
                   }
 
+presence_sensor = { 'sleep_time_in_seconds_between_reads': 60.0,
+                     }
+
 remote_arduino_sensor = { 'gpio_port': 17,
                           'location_name': "Room",
                           'sleep_time_in_seconds_between_reads': 60.0,
@@ -35,8 +37,11 @@ remote_arduino_sensor = { 'gpio_port': 17,
 runtime_variables = { 'debug' : True,
                       'log_format' : '%(asctime)s [%(levelname)s] (%(threadName)-10s) %(message)s',
                       'log_date_format' : '%H:%M:%S',
-                      'sleep_time_in_seconds_between_reads' : 60.0,
-                       }                    
+                       }      
+
+boiler = { 'temperature_margin' : 0.5,
+           'sleep_time_in_seconds_between_checks' : 60.0,
+           }
 
 webapp = { 'listening_ip': '0.0.0.0',
             }
