@@ -50,3 +50,8 @@ sudo systemctl start gardenCity_HeaterControl
 sudo systemctl status gardenCity_HeaterControl.service
 
 echo 'Install NR24 bla'
+
+
+#Other tools for dev:
+pip install autopep8
+#autopep8 -i LocalSensorGatherer.py  (makes modifications to the file in site to make it pep8 compliant)
