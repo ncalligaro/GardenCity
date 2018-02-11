@@ -24,13 +24,15 @@ from time import sleep
 import logging
 
 # import sys
-# import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO
 # from lib_nrf24 import NRF24
 # import spidev
 
 logging.basicConfig(level=config.get_logging_level(),
                     format=config.runtime_variables['log_format'],
                     datefmt=config.runtime_variables['log_date_format'])
+
+GPIO.setmode(GPIO.BCM)
 
 app = Flask(__name__)
 app.logger.setLevel(logging.ERROR)
@@ -82,8 +84,13 @@ def delete_heater_schedule(id):
 @app.route('/heater/status', methods=['PUT'])
 def set_heater_status():
     boiler_status['is_boiler_on'] = request.json['isBoilerOn']
-    boiler_status['is_temporarily_overriden'] = True
+    # If override changing from on to off then reset temporarily overriden
+    if boiler_status['is_schedule_overriden'] and not request.json['isScheduleOverriden']:
+        boiler_status['is_temporarily_overriden'] = False
+    else:
+        boiler_status['is_temporarily_overriden'] = True
     boiler_status['is_schedule_overriden'] = request.json['isScheduleOverriden']
+    heater_controller_actioner()
     return get_heater_status()
 
 @app.route('/heater/status', methods=['GET'])
@@ -221,17 +228,34 @@ def calculate_new_boiler_state():
     logging.debug('New state should be %s' % (schedule_state and temperature_state))
     return schedule_state and temperature_state, '%s%s' % (schedule_reason, temperature_reason), '%s - %s' % (schedule_reason_explanation, temperature_reason_explanation)
 
+def setup_relay_port():
+    GPIO.setup(config.boiler['gpio_port'], GPIO.OUT)   
+    GPIO.output(config.boiler['gpio_port'], GPIO.LOW)  
+
+def action_boiler_relay(is_relay_on):
+    if is_relay_on:
+        logging.debug("Turned on relay port")
+        GPIO.output(config.boiler['gpio_port'], GPIO.HIGH)  
+    else:
+        logging.debug("Turned off relay port")
+        GPIO.output(config.boiler['gpio_port'], GPIO.LOW)  
+
+def heater_controller_actioner():
+    state, reason, reason_explanation = calculate_new_boiler_state()
+    state_text = get_boiler_text_value_for(state)
+
+    now = datetime.datetime.utcnow()
+
+    commonFunctions.save_heater_data(state_text, reason, reason_explanation, now.isoformat(), now.isoformat())
+    boiler_status['is_boiler_on'] = state
+    logging.debug("is_boiler_on: %s | is_schedule_overriden: %s | is_temporarily_overriden: %s | last_scheduled_value: %s" % (boiler_status['is_boiler_on'], boiler_status['is_schedule_overriden'], boiler_status['is_temporarily_overriden'], boiler_status['last_scheduled_value']))
+    action_boiler_relay(state)
+
 def heater_controller_daemon():
     logging.info("Starting Heater Controller Daemon")
+    setup_relay_port()
     while(True):
-        state, reason, reason_explanation = calculate_new_boiler_state()
-        state_text = get_boiler_text_value_for(state)
-
-        now = datetime.datetime.utcnow()
-
-        commonFunctions.save_heater_data(state_text, reason, reason_explanation, now.isoformat(), now.isoformat())
-        boiler_status['is_boiler_on'] = state
-        logging.debug("is_boiler_on: %s | is_schedule_overriden: %s | is_temporarily_overriden: %s | last_scheduled_value: %s" % (boiler_status['is_boiler_on'], boiler_status['is_schedule_overriden'], boiler_status['is_temporarily_overriden'], boiler_status['last_scheduled_value']))
+        heater_controller_actioner()
         sleep(config.boiler['sleep_time_in_seconds_between_checks'])
 
 def web_app_main():
@@ -257,8 +281,8 @@ def main():
         logging.debug (e)
         logging.debug(traceback.format_exc())
     finally:
-        #logging.debug("\nCleaning GPIO port\n")
-        # GPIO.cleanup()
+        logging.debug("Cleaning GPIO port")
+        GPIO.cleanup()
         logging.info("Shutting Down")
 
 # call main
