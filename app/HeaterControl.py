@@ -53,7 +53,7 @@ def index():
 def get_heater_schedule():
     schedules = schedule_table.all()
     schedules = list(map(add_doc_id_as_id_to_entry, schedules))
-    schedules = sorted(schedules, key=lambda schedule: schedule['dayOfWeek'])
+    schedules = sorted(schedules, key=lambda schedule: (schedule['dayOfWeek']*10000 + schedule['fromTimeDecimal']))
     return jsonify(schedules)
 
 @app.route('/heater/schedule', methods=['POST'])
