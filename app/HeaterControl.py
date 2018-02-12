@@ -23,7 +23,7 @@ import threading
 from time import sleep
 import logging
 
-# import sys
+import sys
 import RPi.GPIO as GPIO
 # from lib_nrf24 import NRF24
 # import spidev
@@ -66,6 +66,7 @@ def add_heater_schedule():
     from_time_decimal = convert_time_to_integer(from_time)
     to_time = request.json['toTime']
     to_time_decimal = convert_time_to_integer(to_time)
+    #BUG here, the DB cannot handle json of decimals to save them but it can read them (shrug)
     target_temperature = int(request.json['targetTemperature'])
     day_of_week_name = calendar.day_name[day_of_week]
 
@@ -106,6 +107,18 @@ def get_places_for_type(measurement_type):
     places = commonFunctions.get_places_for_type(measurement_type)
     return jsonify(places)
 
+@app.route('/temperature/avg/<place>', methods=['GET'])
+def get_current_avg_temperature_for_as_json(place):
+    max_age_in_mins = request.args.get('maxAge')
+    return jsonify(get_current_avg_temperature_for(place, max_age_in_mins))
+
+def get_current_avg_temperature_for(place, time_period_in_mins):
+    temperature, measurement_date = commonFunctions.get_last_avg_measurement_for_place(commonFunctions.MEASUREMENT_TYPE_TEMPERATURE, place, time_period_in_mins)
+    result = {}
+    result['temperature'] = temperature
+    result['measurement_date'] = measurement_date
+    return result
+
 @app.route('/temperature/<place>', methods=['GET'])
 def get_current_temperature_for_as_json(place):
     max_age_in_mins = request.args.get('maxAge')
@@ -117,7 +130,6 @@ def get_current_temperature_for(place, max_age_in_mins):
     result['temperature'] = temperature
     result['measurement_date'] = measurement_date
     return result
-
 
 def add_doc_id_as_id_to_entry(entry):
     entry['object_id'] = entry.doc_id
@@ -141,7 +153,7 @@ def get_active_schedule_configuration():
         for active_schedule in active_schedules:
             logging.error('dayOfWeek: %s | fromTime: %s | toTime: %s' % (active_schedule['dayOfWeek'], active_schedule['fromTime'], active_schedule['toTime']))
         raise ValueError('More than one active schedule found for %s' % now.isoformat())
-    logging.debug('Found an active schedule')
+    logging.debug('Found an active schedule: %s', active_schedules[0])
     return active_schedules[0]
 
 def get_boiler_status_for_active_schedule():
@@ -193,9 +205,12 @@ def calculate_new_boiler_state_on_schedule():
     logging.debug("%s. Value is %s " % (reason_explanation, state))
     return state, reason, reason_explanation
 
-def calculate_new_boiler_state_on_temperature():
-    current_temperature_dining = get_current_temperature_for('Dining', 15)
-    if current_temperature_dining is None:
+def calculate_new_boiler_state_on_temperature(is_boiler_on):
+    avg_time_period_mins = 10
+    location = 'Dining'
+    current_avg_temperature_dining = get_current_avg_temperature_for(location, avg_time_period_mins)
+    logging.debug('average temperature past %s minutes in %s is %s' % (avg_time_period_mins, location, current_avg_temperature_dining))
+    if current_avg_temperature_dining is None:
         logging.error('Unable to read Dining temperature')
         return None, None, None
     
@@ -204,26 +219,27 @@ def calculate_new_boiler_state_on_temperature():
         logging.debug('There is no schedule active at this moment. Setting boiler to off/False')
         return False, '.1', 'There is no schedule active at this moment. Boiler needs to be off'
 
-    temperature = current_temperature_dining['temperature']
-    if is_temperature_within_margin(current_schedule['targetTemperature'], config.boiler['temperature_margin'], temperature):
+    temperature = current_avg_temperature_dining['temperature']
+    if is_temperature_within_margin(current_schedule['targetTemperature'], config.boiler['temperature_margin'], temperature, is_boiler_on):
         return True, '.2', 'Temperature within margin. Boiler needs to be on'
     return False, '.3', 'Temperature is too high. Boiler needs to be off'
 
-def is_temperature_within_margin(target_temperature, margin, current_temperature):
+def is_temperature_within_margin(target_temperature, margin, current_temperature, is_boiler_on):
     difference = target_temperature - current_temperature
-    is_too_low = current_temperature < target_temperature
+    is_too_low = current_temperature < (target_temperature - margin)
     is_within_margin = abs(difference) < margin
-    result = is_too_low or is_within_margin
+    is_too_high = current_temperature >= (target_temperature + margin * 0.5)
+    result = (is_too_low or (is_within_margin and is_boiler_on)) and not is_too_high
     logging.debug('current_temperature: %s | target_temperature: %s' % (current_temperature, target_temperature))
-    logging.debug('temperature is too low: %s | temperature is within margin: %s (diff is %s) | result: %s' % (is_too_low, is_within_margin, difference, result))
+    logging.debug('temperature is too low: %s | temperature is within margin: %s (diff is %s) | is_too_high: %s | result: %s' % (is_too_low, is_within_margin, difference, is_too_high, result))
     return result
 
-def calculate_new_boiler_state():
+def calculate_new_boiler_state(is_boiler_on):
     # First calculate schedule state
     schedule_state, schedule_reason, schedule_reason_explanation = calculate_new_boiler_state_on_schedule()
     logging.debug('schedule_state: %s | schedule_reason: %s | schedule_reason_explanation: %s' % (schedule_state, schedule_reason, schedule_reason_explanation))
     # Now calculate temperature state
-    temperature_state, temperature_reason, temperature_reason_explanation = calculate_new_boiler_state_on_temperature()
+    temperature_state, temperature_reason, temperature_reason_explanation = calculate_new_boiler_state_on_temperature(is_boiler_on)
     logging.debug('temperature_state: %s | temperature_reason: %s | temperature_reason_explanation: %s' % (temperature_state, temperature_reason, temperature_reason_explanation))
     logging.debug('New state should be %s' % (schedule_state and temperature_state))
     return schedule_state and temperature_state, '%s%s' % (schedule_reason, temperature_reason), '%s - %s' % (schedule_reason_explanation, temperature_reason_explanation)
@@ -233,6 +249,7 @@ def setup_relay_port():
     GPIO.output(config.boiler['gpio_port'], GPIO.LOW)  
 
 def action_boiler_relay(is_relay_on):
+    GPIO.setup(config.boiler['gpio_port'], GPIO.OUT)
     if is_relay_on:
         logging.debug("Turned on relay port")
         GPIO.output(config.boiler['gpio_port'], GPIO.HIGH)  
@@ -241,7 +258,7 @@ def action_boiler_relay(is_relay_on):
         GPIO.output(config.boiler['gpio_port'], GPIO.LOW)  
 
 def heater_controller_actioner():
-    state, reason, reason_explanation = calculate_new_boiler_state()
+    state, reason, reason_explanation = calculate_new_boiler_state(boiler_status['is_boiler_on'])
     state_text = get_boiler_text_value_for(state)
 
     now = datetime.datetime.utcnow()

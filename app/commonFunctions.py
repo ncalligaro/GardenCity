@@ -201,6 +201,39 @@ def fetch_one_record_as_dictionary(cursor):
 
     return dict
 
+def get_last_avg_measurement_for_place(value_type, place, time_period_in_mins):
+    if place is None or value_type is None:
+        return None
+    if time_period_in_mins is None:
+        time_period_in_mins = 5
+
+    db_connection = None
+    cursor = None
+    try:
+        db_connection = connect_to_db()
+        cursor = db_connection.cursor()
+        
+        #Only get values from last X minutes
+        query_sentence = ("SELECT avg(value) as avg FROM measurement WHERE place = '%s' AND type = '%s' AND measurement_date > (now() - INTERVAL %s MINUTE) ORDER BY measurement_date DESC LIMIT 1" % (place, value_type, time_period_in_mins))
+        
+        cursor.execute(query_sentence)
+        record = fetch_one_record_as_dictionary(cursor)
+
+        if record is None:
+            return None, None
+
+        return record['avg'], None
+    except mariadb.Error as error:
+        logging.debug("Error executing DB query: {}".format(error))
+        logging.debug (error)
+        logging.debug(traceback.format_exc())
+        return None, None
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if db_connection is not None:
+            db_connection.close()
+
 def get_last_measurement_for_place(value_type, place, max_age_in_mins):
     if place is None or value_type is None:
         return None
