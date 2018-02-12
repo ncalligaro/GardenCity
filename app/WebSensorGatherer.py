@@ -77,10 +77,12 @@ def main():
             sleep(config.open_map['sleep_time_in_seconds_between_reads'])
     except KeyboardInterrupt:
         logging.error("\nbye!")
+        sys.exit(1)
     except Exception as e:
         logging.error("\nOther error occurred")
         logging.error (e)
         logging.error(traceback.format_exc())
+        sys.exit(1)
     finally:
         logging.info("\nbye2!")
         #print("\nCleaning GPIO port\n")

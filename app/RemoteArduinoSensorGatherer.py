@@ -98,10 +98,12 @@ def main():
             sleep(config.remote_arduino_sensor['sleep_time_in_seconds_between_reads'])
     except KeyboardInterrupt:
         logging.error("\nbye!")
+        sys.exit(1)
     except Exception as e:
         logging.error("\nOther error occurred")
         logging.error (e)
         logging.error(traceback.format_exc())
+        sys.exit(1)
     finally:
         logging.info("\nCleaning GPIO port\n")
         GPIO.cleanup()
