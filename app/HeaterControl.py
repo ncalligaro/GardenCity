@@ -275,11 +275,11 @@ def main():
         t.start()
         heater_controller_daemon()
     except KeyboardInterrupt:
-        logging.debug("bye!")
+        logging.error("bye!")
     except Exception as e:
-        logging.debug("Other error occurred")
-        logging.debug (e)
-        logging.debug(traceback.format_exc())
+        logging.error("Other error occurred")
+        logging.error (e)
+        logging.error(traceback.format_exc())
     finally:
         logging.debug("Cleaning GPIO port")
         GPIO.cleanup()

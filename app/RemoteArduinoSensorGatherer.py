@@ -14,6 +14,7 @@ import httplib
 import urllib
 import json
 import logging
+from time import sleep
 
 import sys
 import RPi.GPIO as GPIO
@@ -96,11 +97,11 @@ def main():
             
             sleep(config.remote_arduino_sensor['sleep_time_in_seconds_between_reads'])
     except KeyboardInterrupt:
-        logging.debug("\nbye!")
+        logging.error("\nbye!")
     except Exception as e:
-        logging.debug("\nOther error occurred")
-        logging.debug (e)
-        logging.debug(traceback.format_exc())
+        logging.error("\nOther error occurred")
+        logging.error (e)
+        logging.error(traceback.format_exc())
     finally:
         logging.info("\nCleaning GPIO port\n")
         GPIO.cleanup()

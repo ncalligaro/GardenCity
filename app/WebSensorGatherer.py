@@ -14,6 +14,7 @@ import urllib
 import json
 import sys
 import logging
+from time import sleep
 
 logging.basicConfig(level=config.get_logging_level(),
                     format=config.runtime_variables['log_format'],
@@ -75,11 +76,11 @@ def main():
 
             sleep(config.open_map['sleep_time_in_seconds_between_reads'])
     except KeyboardInterrupt:
-        logging.debug("\nbye!")
+        logging.error("\nbye!")
     except Exception as e:
-        logging.debug("\nOther error occurred")
-        logging.debug (e)
-        logging.debug(traceback.format_exc())
+        logging.error("\nOther error occurred")
+        logging.error (e)
+        logging.error(traceback.format_exc())
     finally:
         logging.info("\nbye2!")
         #print("\nCleaning GPIO port\n")

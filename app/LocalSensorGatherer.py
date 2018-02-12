@@ -8,6 +8,7 @@ import sys
 import serial
 import datetime
 import time
+from time import sleep
 import re
 import traceback
 import json
@@ -46,11 +47,11 @@ def main():
 
             sleep(config.local_sensor['sleep_time_in_seconds_between_reads'])
     except KeyboardInterrupt:
-        logging.debug("\nbye!")
+        logging.error("\nbye!")
     except Exception as e:
-        logging.debug("\nOther error occurred")
-        logging.debug (e)
-        logging.debug(traceback.format_exc())
+        logging.error("\nOther error occurred")
+        logging.error (e)
+        logging.error(traceback.format_exc())
     finally:
         logging.info("\nCleaning GPIO port\n")
         GPIO.cleanup()
