@@ -150,6 +150,16 @@
         })
       };
 
+      $scope.isPlaceDrivingTemperature = function(place){
+        if (typeof $scope.activeSchedule.targetPlace === 'undefined') {
+          return (place == 'Dining');
+        }
+        if ($scope.activeSchedule.targetPlace == place){
+          return true;
+        }
+        return false;
+      };
+
       $scope.getIsBoilerOnLegend = function() {
         var isBoilerOnLegend = "off";
         $scope.isBoilerOn && (isBoilerOnLegend = "on");

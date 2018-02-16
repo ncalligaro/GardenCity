@@ -67,7 +67,7 @@
       <div class="row">
         <div class="col-md-3 p-3" ng-repeat="place in availablePlaces">
           <div class="alert" ng-class="getAlertTypeForTemperatureRange(currentTemperatures[place].temperature)">
-            {{place}}: {{currentTemperatures[place].roundedTemperature}} C
+            {{place}}: {{currentTemperatures[place].roundedTemperature}} C <span ng-show="isPlaceDrivingTemperature(place)" class="badge">Driver</span>
           </div>
         </div>
       </div>
