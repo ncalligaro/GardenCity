@@ -9,10 +9,11 @@
       $scope.isBoilerOn = false;
       $scope.isScheduleOverriden = false;
       $scope.schedules = [];
-      $scope.newSchedule = { 'fromTime':'17:00', 'toTime':'23:55', 'dayOfWeek': '0', 'targetTemperature': '20.5' };
+      $scope.newSchedule = { 'fromTime':'17:00', 'toTime':'23:55', 'dayOfWeek': '0', 'targetTemperature': '20.5', 'place': 'Dining' };
       $scope.temperatureList = [];
       $scope.currentTemperatures = [];
       $scope.availablePlaces = ['Room','Dining','city_London','Kitchen'];
+      $scope.activeSchedule = {};
 
       $scope.currentDayOfWeekInPython = function(){
         var dayIndex = (new Date()).getDay();
@@ -76,9 +77,10 @@
       };
 
       $scope.getSchedules = function() {
-        $http.get('/heater/schedule')
+        $http.get('/schedule')
           .success(function(response){
             $scope.schedules = response;
+            $scope.getActiveSchedule();
           })
       };
 
@@ -90,14 +92,14 @@
       
       $scope.deleteSchedule = function(schedule){
         $scope.updateFormWithData(schedule);
-        $http.delete('/heater/schedule/' + schedule['object_id'])
+        $http.delete('/schedule/' + schedule['object_id'])
           .success(function(response){
             $scope.getSchedules();
           })
       };
 
       $scope.addSchedule = function(){
-        $http.post('/heater/schedule', $scope.newSchedule)
+        $http.post('/schedule', $scope.newSchedule)
         .success(function(response){
           $scope.getSchedules();
         })
@@ -108,6 +110,7 @@
         $scope.newSchedule['toTime'] = schedule['toTime'];
         $scope.newSchedule['dayOfWeek'] = String(schedule['dayOfWeek']);
         $scope.newSchedule['targetTemperature'] = String(schedule['targetTemperature']);
+        $scope.newSchedule['targetPlace'] = schedule['targetPlace'];
       };
 
       $scope.toggleBoiler = function() {
@@ -152,6 +155,20 @@
         return isScheduleOverridenLegend;
       };
 
+      $scope.isSameSchedule = function(schedule1, schedule2) {
+        if (schedule1 === undefined || schedule2 === undefined){
+          return false;
+        }
+        return (schedule1.dayOfWeek == schedule2.dayOfWeek && schedule1.fromTime == schedule2.fromTime && schedule1.toTime == schedule2.toTime);
+      };
+
+      $scope.getActiveSchedule = function() {
+        $http.get('/schedule/active')
+          .success(function(response){
+            $scope.activeSchedule = response;
+          })
+      };
+
       //Executing functions at startup
       $scope.fillTemperatureList();
       $scope.getSchedules();
@@ -161,6 +178,7 @@
       setInterval(function(){
         $scope.getBoilerStatus();
         $scope.fetchCurrentTemperatures();
+        $scope.getSchedules();
       }, 60000);
     }
   ]);

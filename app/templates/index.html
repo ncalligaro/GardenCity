@@ -189,15 +189,17 @@
                 <th scope="col">Day</th>
                 <th scope="col">'On' Times</th>
                 <th scope="col">Temp</th>
+                <th scope="col">Place</th>
                 <th scope="col"><span class="glyphicon glyphicon-trash"/></th>
               </tr>
             </thead>
             <tbody>
-              <tr ng-repeat="schedule in schedules">
-                <td>{{schedule['dayOfWeekName']}}</th>
-                <td>{{schedule['fromTime']}} - {{schedule['toTime']}}</td>
-                <td>{{schedule['targetTemperature']}}</th>
-                <td><span class="glyphicon glyphicon-trash" ng-dblClick="deleteSchedule(schedule)"/></td>
+              <tr ng-repeat="schedule in schedules" >
+                <td ng-class="(isSameSchedule(schedule,activeSchedule))?'bg-primary':''">{{schedule['dayOfWeekName']}}</th>
+                <td ng-class="(isSameSchedule(schedule,activeSchedule))?'bg-primary':''">{{schedule['fromTime']}} - {{schedule['toTime']}}</td>
+                <td ng-class="(isSameSchedule(schedule,activeSchedule))?'bg-primary':''">{{schedule['targetTemperature']}}</th>
+                <td ng-class="(isSameSchedule(schedule,activeSchedule))?'bg-primary':''">{{schedule['targetPlace']}}</th>
+                <td ng-class="(isSameSchedule(schedule,activeSchedule))?'bg-primary':''"><span class="glyphicon glyphicon-trash" ng-dblClick="deleteSchedule(schedule)"/></td>
               </tr>
             </tbody>
           </table>
@@ -222,7 +224,7 @@
               </span>
               <input type="text" class="form-control" name="fromTime" placeholder="Select start time" ng-model="newSchedule.fromTime">
             </div>
-            <small id="fromTimeHelp" class="form-text text-muted">Start Time</small>
+            <small id="fromTimeHelp" class="form-text text-muted">Start time</small>
           </div>
           <div class="form-group mb-3">
             <div class="input-group" moment-picker="newSchedule.toTime" format="HH:mm" >
@@ -231,7 +233,7 @@
               </span>
               <input type="text" class="form-control" name="toTime" placeholder="Select end time" ng-model="newSchedule.toTime">
             </div>
-            <small id="toTimeHelp" class="form-text text-muted">End Time</small>
+            <small id="toTimeHelp" class="form-text text-muted">End time</small>
           </div>
           <div class="form-group my-3">
             <select class="form-control" name="targetTemperature" 
@@ -240,7 +242,16 @@
                 ng-options="temperature for temperature in temperatureList">
             </select>
 
-            <small id="targetTemperatureHelp" class="form-text text-muted">Desired Temperature in Dining Room</small>
+            <small id="targetTemperatureHelp" class="form-text text-muted">Desired temperature in selected room</small>
+          </div>
+          <div class="form-group my-3">
+            <select class="form-control" name="place" 
+                ng-model="newSchedule.place"
+                ng-change=""
+                ng-options="place for place in availablePlaces">
+            </select>
+
+            <small id="targetPlaceHelp" class="form-text text-muted">Select room that will drive temperature</small>
           </div>
           <button type="submit"  ng-click="addSchedule()" class="btn btn-primary my-2">Add Schedule</button>
         </div>

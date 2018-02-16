@@ -52,14 +52,14 @@ schedule_table = db.table('schedules')
 def index():
     return render_template('index.html')
 
-@app.route('/heater/schedule', methods=['GET'])
+@app.route('/schedule', methods=['GET'])
 def get_heater_schedule():
     schedules = schedule_table.all()
     schedules = list(map(add_doc_id_as_id_to_entry, schedules))
     schedules = sorted(schedules, key=lambda schedule: (schedule['dayOfWeek']*10000 + schedule['fromTimeDecimal']))
     return jsonify(schedules)
 
-@app.route('/heater/schedule', methods=['POST'])
+@app.route('/schedule', methods=['POST'])
 def add_heater_schedule():
     day_of_week = int(request.json['dayOfWeek'])
     from_time = request.json['fromTime']
@@ -68,16 +68,17 @@ def add_heater_schedule():
     to_time_decimal = convert_time_to_integer(to_time)
     #BUG here, the DB cannot handle json of decimals to save them but it can read them (shrug)
     target_temperature = float(request.json['targetTemperature'])
+    target_place = float(request.json['targetPlace'])
     day_of_week_name = calendar.day_name[day_of_week]
 
     if (day_of_week is not None and from_time is not None and to_time is not None and target_temperature is not None):
-        new_id = schedule_table.insert({'dayOfWeek' : day_of_week, 'dayOfWeekName': day_of_week_name, 'fromTime': from_time, 'fromTimeDecimal': from_time_decimal, 'toTime': to_time, 'toTimeDecimal': to_time_decimal, 'targetTemperature': target_temperature })
+        new_id = schedule_table.insert({'dayOfWeek' : day_of_week, 'dayOfWeekName': day_of_week_name, 'fromTime': from_time, 'fromTimeDecimal': from_time_decimal, 'toTime': to_time, 'toTimeDecimal': to_time_decimal, 'targetTemperature': target_temperature, 'targetPlace': target_place })
         new_schedule = schedule_table.get(doc_id=new_id)
         return jsonify(new_schedule)
     else:
         return jsonify({'errors':['One of the values was None']})
 
-@app.route('/heater/schedule/<id>', methods=['DELETE'])
+@app.route('/schedule/<id>', methods=['DELETE'])
 def delete_heater_schedule(id):
     schedule_table.remove(doc_ids=[int(id)])
     return ''
@@ -139,6 +140,10 @@ def get_boiler_text_value_for(value):
     if value:
         return 'on'
     return 'off'
+
+@app.route('/schedule/active', methods=['GET'])
+def get_active_schedule_configuration_as_json():
+    return jsonify(get_active_schedule_configuration())
 
 def get_active_schedule_configuration():
     now = datetime.datetime.now()
