@@ -97,8 +97,8 @@
       $scope.updateFormWithData = function(schedule){
         $scope.newSchedule['fromTime'] = schedule['fromTime'];
         $scope.newSchedule['toTime'] = schedule['toTime'];
-        $scope.newSchedule['dayOfWeek'] = schedule['dayOfWeek'];
-        $scope.newSchedule['targetTemperature'] = schedule['targetTemperature'];
+        $scope.newSchedule['dayOfWeek'] = String(schedule['dayOfWeek']);
+        $scope.newSchedule['targetTemperature'] = String(schedule['targetTemperature']);
       };
 
       $scope.toggleBoiler = function() {

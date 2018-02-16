@@ -67,7 +67,7 @@ def add_heater_schedule():
     to_time = request.json['toTime']
     to_time_decimal = convert_time_to_integer(to_time)
     #BUG here, the DB cannot handle json of decimals to save them but it can read them (shrug)
-    target_temperature = int(request.json['targetTemperature'])
+    target_temperature = float(request.json['targetTemperature'])
     day_of_week_name = calendar.day_name[day_of_week]
 
     if (day_of_week is not None and from_time is not None and to_time is not None and target_temperature is not None):
@@ -215,11 +215,13 @@ def calculate_new_boiler_state_on_temperature(is_boiler_on):
         return None, None, None
     
     current_schedule = get_active_schedule_configuration()
-    if not current_schedule:
-        logging.debug('There is no schedule active at this moment. Setting boiler to off/False')
-        return False, '.1', 'There is no schedule active at this moment. Boiler needs to be off'
-
     temperature = current_avg_temperature_dining['temperature']
+    if not current_schedule:
+        logging.debug('There is no schedule active at this moment. Using default temperature %s' % (config.boiler['default_temperature']))
+        if is_temperature_within_margin(config.boiler['default_temperature'], config.boiler['temperature_margin'], temperature, is_boiler_on):
+            return True, '.5', ('Using default temperature %s. Temperature within margin. Boiler needs to be on' % (config.boiler['default_temperature']))
+        return False, '.4', ('Using default temperature %s. Temperature is too high. Boiler needs to be off' % (config.boiler['default_temperature']))
+
     if is_temperature_within_margin(current_schedule['targetTemperature'], config.boiler['temperature_margin'], temperature, is_boiler_on):
         return True, '.2', 'Temperature within margin. Boiler needs to be on'
     return False, '.3', 'Temperature is too high. Boiler needs to be off'
