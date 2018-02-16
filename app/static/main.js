@@ -7,6 +7,7 @@
     function($scope, $log, $http) {
 
       $scope.isBoilerOn = false;
+      $scope.isCurrentScheduleOverriden = false;
       $scope.isScheduleOverriden = false;
       $scope.schedules = [];
       $scope.newSchedule = { 'fromTime':'17:00', 'toTime':'23:55', 'dayOfWeek': '0', 'targetTemperature': '20.5', 'place': 'Dining' };
@@ -115,11 +116,15 @@
 
       $scope.toggleBoiler = function() {
         $scope.isBoilerOn = !$scope.isBoilerOn;
+        $scope.isCurrentScheduleOverriden = true;
         $scope.updateBoilerStatus();
       };
 
       $scope.toggleisScheduleOverriden = function() {
         $scope.isScheduleOverriden = !$scope.isScheduleOverriden;
+        if (! $scope.isScheduleOverriden ){
+          $scope.isCurrentScheduleOverriden = false;
+        }
         $scope.updateBoilerStatus();
       };
       
@@ -135,11 +140,13 @@
         var boilerStatus = {};
         boilerStatus.isBoilerOn = $scope.isBoilerOn;
         boilerStatus.isScheduleOverriden = $scope.isScheduleOverriden;
+        boilerStatus.isCurrentScheduleOverriden = $scope.isCurrentScheduleOverriden;
 
         $http.put('/heater/status', boilerStatus)
         .success(function(response){
           $scope.isBoilerOn = response.isBoilerOn;
           $scope.isScheduleOverriden = response.isScheduleOverriden;
+          $scope.isCurrentScheduleOverriden = response.isCurrentScheduleOverriden;
         })
       };
 
@@ -147,6 +154,12 @@
         var isBoilerOnLegend = "off";
         $scope.isBoilerOn && (isBoilerOnLegend = "on");
         return isBoilerOnLegend;
+      };
+
+      $scope.getIsCurrentScheduleOverridenLegend = function() {
+        var isCurrentScheduleOverridenLegendLegend = "not overriden";
+        $scope.isCurrentScheduleOverriden && (isCurrentScheduleOverridenLegendLegend = "overriden");
+        return isCurrentScheduleOverridenLegendLegend;
       };
 
       $scope.getIsScheduleOverridenStatusLegend = function() {

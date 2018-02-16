@@ -37,7 +37,7 @@ GPIO.setmode(GPIO.BCM)
 app = Flask(__name__)
 app.logger.setLevel(logging.ERROR)
 
-boiler_status = {'is_boiler_on': False, 'is_schedule_overriden': False, 'is_temporarily_overriden': False, 'last_scheduled_value': False}
+boiler_status = {'is_boiler_on': False, 'is_schedule_overriden': False, 'last_scheduled_value': False, 'isCurrentScheduleOverriden': False}
 
 
 #list(calendar.day_name)
@@ -88,10 +88,12 @@ def set_heater_status():
     boiler_status['is_boiler_on'] = request.json['isBoilerOn']
     # If override changing from on to off then reset temporarily overriden
     if boiler_status['is_schedule_overriden'] and not request.json['isScheduleOverriden']:
-        boiler_status['is_temporarily_overriden'] = False
+        boiler_status['isCurrentScheduleOverriden'] = False
     else:
-        boiler_status['is_temporarily_overriden'] = True
+        boiler_status['isCurrentScheduleOverriden'] = True
     boiler_status['is_schedule_overriden'] = request.json['isScheduleOverriden']
+    boiler_status['last_scheduled_value'] = boiler_status['is_boiler_on']
+    
     heater_controller_actioner()
     return get_heater_status()
 
@@ -100,6 +102,7 @@ def get_heater_status():
     boiler_status_response = {}
     boiler_status_response['isBoilerOn'] = boiler_status['is_boiler_on']
     boiler_status_response['isScheduleOverriden'] = boiler_status['is_schedule_overriden']
+    boiler_status_response['isCurrentScheduleOverriden'] = boiler_status['isCurrentScheduleOverriden']
     return jsonify(boiler_status_response)
 
 
@@ -185,11 +188,11 @@ def calculate_new_boiler_state_on_schedule():
 
     # If it is NOT fully overriden then it might be temporarily overriden
     scheduled_boiler_status = get_boiler_status_for_active_schedule()
-    if boiler_status['is_temporarily_overriden']:
+    if boiler_status['isCurrentScheduleOverriden']:
         if boiler_status['last_scheduled_value'] != scheduled_boiler_status:
             # Last boiler status is not the same as the new one and it is temporarily overriden so change it!
             boiler_status['last_scheduled_value'] = scheduled_boiler_status
-            boiler_status['is_temporarily_overriden'] = False
+            boiler_status['isCurrentScheduleOverriden'] = False
             state = scheduled_boiler_status
             reason = '2'
             reason_explanation = 'Schedule temporarily overriden but scheduled value changed. Returned new value'
@@ -272,7 +275,7 @@ def heater_controller_actioner():
 
     commonFunctions.save_heater_data(state_text, reason, reason_explanation, now.isoformat(), now.isoformat())
     boiler_status['is_boiler_on'] = state
-    logging.debug("is_boiler_on: %s | is_schedule_overriden: %s | is_temporarily_overriden: %s | last_scheduled_value: %s" % (boiler_status['is_boiler_on'], boiler_status['is_schedule_overriden'], boiler_status['is_temporarily_overriden'], boiler_status['last_scheduled_value']))
+    logging.debug("is_boiler_on: %s | is_schedule_overriden: %s | isCurrentScheduleOverriden: %s | last_scheduled_value: %s" % (boiler_status['is_boiler_on'], boiler_status['is_schedule_overriden'], boiler_status['isCurrentScheduleOverriden'], boiler_status['last_scheduled_value']))
     action_boiler_relay(state)
 
 def heater_controller_daemon():
