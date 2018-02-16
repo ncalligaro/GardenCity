@@ -68,7 +68,7 @@ def add_heater_schedule():
     to_time_decimal = convert_time_to_integer(to_time)
     #BUG here, the DB cannot handle json of decimals to save them but it can read them (shrug)
     target_temperature = float(request.json['targetTemperature'])
-    target_place = float(request.json['targetPlace'])
+    target_place = request.json['targetPlace']
     day_of_week_name = calendar.day_name[day_of_week]
 
     if (day_of_week is not None and from_time is not None and to_time is not None and target_temperature is not None):

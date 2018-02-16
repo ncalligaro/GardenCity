@@ -10,7 +10,7 @@
       $scope.isCurrentScheduleOverriden = false;
       $scope.isScheduleOverriden = false;
       $scope.schedules = [];
-      $scope.newSchedule = { 'fromTime':'17:00', 'toTime':'23:55', 'dayOfWeek': '0', 'targetTemperature': '20.5', 'place': 'Dining' };
+      $scope.newSchedule = { 'fromTime':'17:00', 'toTime':'23:55', 'dayOfWeek': '0', 'targetTemperature': '20.5', 'targetPlace': 'Dining' };
       $scope.temperatureList = [];
       $scope.currentTemperatures = [];
       $scope.availablePlaces = ['Room','Dining','city_London','Kitchen'];
@@ -151,7 +151,7 @@
       };
 
       $scope.isPlaceDrivingTemperature = function(place){
-        if (typeof $scope.activeSchedule.targetPlace === 'undefined') {
+        if ($scope.activeSchedule == null || typeof $scope.activeSchedule.targetPlace === 'undefined') {
           return (place == 'Dining');
         }
         if ($scope.activeSchedule.targetPlace == place){
@@ -179,7 +179,10 @@
       };
 
       $scope.isSameSchedule = function(schedule1, schedule2) {
-        if (schedule1 === undefined || schedule2 === undefined){
+        if (typeof schedule1 === undefined || typeof schedule2 === undefined){
+          return false;
+        }
+        if (schedule1 == null || schedule2 == null){
           return false;
         }
         return (schedule1.dayOfWeek == schedule2.dayOfWeek && schedule1.fromTime == schedule2.fromTime && schedule1.toTime == schedule2.toTime);
