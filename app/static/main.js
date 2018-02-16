@@ -9,10 +9,19 @@
       $scope.isBoilerOn = false;
       $scope.isScheduleOverriden = false;
       $scope.schedules = [];
-      $scope.newSchedule = { 'fromTime':'09:00', 'toTime':'10:00', 'dayOfWeek':'2', 'targetTemperature': '19' };
+      $scope.newSchedule = { 'fromTime':'17:00', 'toTime':'23:55', 'dayOfWeek': '0', 'targetTemperature': '20.5' };
       $scope.temperatureList = [];
       $scope.currentTemperatures = [];
       $scope.availablePlaces = ['Room','Dining','city_London','Kitchen'];
+
+      $scope.currentDayOfWeekInPython = function(){
+        var dayIndex = (new Date()).getDay();
+        dayIndex = dayIndex -1;
+        if (dayIndex == -1){
+          dayIndex = 6;
+        }
+        return String(dayIndex);
+      };
 
       $scope.fetchPlaces = function() {
         $http.get('/places/temperature')
@@ -148,10 +157,11 @@
       $scope.getSchedules();
       $scope.getBoilerStatus();
       $scope.fetchPlaces();
+      $scope.newSchedule.dayOfWeek = $scope.currentDayOfWeekInPython();
       setInterval(function(){
         $scope.getBoilerStatus();
         $scope.fetchCurrentTemperatures();
-      }, 10000);
+      }, 60000);
     }
   ]);
 
