@@ -120,43 +120,6 @@
     </div>
   </div>
 
-  <div class="py-4">
-    <div class="container">
-      <div class="row">
-        <div class="col-12">
-          <h2>Status</h2>
-          <hr class="mb-4"> 
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-12">
-          <div class="alert" ng-class="isBoilerOn?'alert-success':'alert-danger'">
-            Current Boiler Status is <strong>{{ getIsBoilerOnLegend() }}</strong>
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-12">
-          <div class="alert" ng-class="isScheduleOverriden?'alert-success':'alert-danger'">
-            Schedule <strong>{{getIsScheduleOverridenStatusLegend()}}</strong> overriden
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-12">
-          <div class="alert" ng-class="isCurrentScheduleOverridenLegend?'alert-success':'alert-danger'">
-            Current Schedule is <strong>{{ getIsCurrentScheduleOverridenLegend() }}</strong>
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-12">
-          <button type="submit" ng-click="getBoilerStatus()" class="btn btn-primary form-control">Refresh Now</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <div class="py-5">
     <div class="container">
       <div class="row">
@@ -176,6 +139,43 @@
             <button type="submit" ng-click="toggleisScheduleOverriden()" class="btn btn-warning form-control">Override Schedule</button>
             <small class="form-text text-muted">Until manual release</small>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="py-4">
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+          <h2>Status</h2>
+          <hr class="mb-4"> 
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12">
+          <div class="alert" ng-class="isBoilerOn?'alert-warning':'alert-info'">
+            Current Boiler Status is <strong>{{ getIsBoilerOnLegend() }}</strong>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12">
+          <div class="alert" ng-class="isScheduleOverriden?'alert-warning':'alert-info'">
+            Schedule <strong>{{getIsScheduleOverridenStatusLegend()}}</strong> overriden
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12">
+          <div class="alert" ng-class="isCurrentScheduleOverriden?'alert-warning':'alert-info'">
+            Current Schedule is <strong>{{ getIsCurrentScheduleOverridenLegend() }}</strong>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12">
+          <button type="submit" ng-click="getBoilerStatus()" class="btn btn-primary form-control">Refresh Now</button>
         </div>
       </div>
     </div>
