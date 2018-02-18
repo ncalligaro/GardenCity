@@ -14,7 +14,8 @@
       $scope.temperatureList = [];
       $scope.currentTemperatures = [];
       $scope.availablePlaces = ['Room','Dining','city_London','Kitchen'];
-      $scope.activeSchedule = {};
+      $scope.activeSchedule = null;
+      $scope.activeSchedulePercentage = 0;
 
       $scope.currentDayOfWeekInPython = function(){
         var dayIndex = (new Date()).getDay();
@@ -33,6 +34,21 @@
             });
             $scope.fetchCurrentTemperatures();
           })
+      };
+
+      $scope.isAnScheduleActive = function() {
+        return ($scope.activeSchedule != null && typeof $scope.activeSchedule.targetPlace !== 'undefined');
+      };
+
+      $scope.updatePercentageOfActiveSchedule = function(){
+        if ( ! $scope.isAnScheduleActive()) {
+         $scope.activeSchedulePercentage = 0;
+         return;
+        }
+        var total = $scope.activeSchedule.toTimeDecimal - $scope.activeSchedule.fromTimeDecimal;
+        var now = new Date();
+        var current = now.getHours() * 100 + now.getMinutes();
+        $scope.activeSchedulePercentage = Math.round(100*(current - $scope.activeSchedule.fromTimeDecimal) * 100 / total) / 100 ;
       };
 
       $scope.getAlertTypeForTemperatureRange = function(temperature) {
@@ -66,7 +82,7 @@
       $scope.fetchAndStoreTemperature = function(place){
         var maxAge = 5;
         if (place == 'city_London'){
-          maxAge = 60;
+          maxAge = 90;
         }
         $http({url:'/temperature/' + place,
                method: 'GET',
@@ -120,7 +136,7 @@
         $scope.updateBoilerStatus();
       };
 
-      $scope.toggleisScheduleOverriden = function() {
+      $scope.toggleIsScheduleOverriden = function() {
         $scope.isScheduleOverriden = !$scope.isScheduleOverriden;
         if (! $scope.isScheduleOverriden ){
           $scope.isCurrentScheduleOverriden = false;
@@ -192,6 +208,7 @@
         $http.get('/schedule/active')
           .success(function(response){
             $scope.activeSchedule = response;
+            $scope.updatePercentageOfActiveSchedule();
           })
       };
 
@@ -199,6 +216,7 @@
       $scope.fillTemperatureList();
       $scope.getSchedules();
       $scope.getBoilerStatus();
+      $scope.fetchCurrentTemperatures();
       $scope.fetchPlaces();
       $scope.newSchedule.dayOfWeek = $scope.currentDayOfWeekInPython();
       setInterval(function(){

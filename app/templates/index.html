@@ -136,7 +136,7 @@
         </div>
         <div class="col-md-6 p-3">
           <div class="form-group my-3">
-            <button type="submit" ng-click="toggleisScheduleOverriden()" class="btn btn-warning form-control">Override Schedule</button>
+            <button type="submit" ng-click="toggleIsScheduleOverriden()" class="btn btn-warning form-control">Override Schedule</button>
             <small class="form-text text-muted">Until manual release</small>
           </div>
         </div>
@@ -150,6 +150,15 @@
         <div class="col-12">
           <h2>Status</h2>
           <hr class="mb-4"> 
+        </div>
+      </div>
+      <div class="row" ng-show="isAnScheduleActive()">
+        <div class="col-12">
+          <div class="progress">
+            <div class="progress-bar" role="progressbar" aria-valuenow="activeSchedulePercentage" aria-valuemin="0" aria-valuemax="100" style="width: {{activeSchedulePercentage}}%;">
+              {{activeSchedulePercentage}}%
+            </div>
+          </div>
         </div>
       </div>
       <div class="row">
