@@ -27,7 +27,13 @@ logging.basicConfig(level=config.get_logging_level(),
 GPIO.setmode(GPIO.BCM)
 
 def get_local_sensor_data():
-    RH, T = Adafruit_DHT.read_retry(Adafruit_DHT.DHT22, config.local_sensor['gpio_port'])
+    sensor_model = config.local_sensor['sensor_model']
+    RH, T = None, None
+    if sensor_model = 'DHT22':
+        RH, T = Adafruit_DHT.read_retry(Adafruit_DHT.DHT22, config.local_sensor['gpio_port'])
+    if sensor_model = 'DHT11':
+        RH, T = Adafruit_DHT.read_retry(Adafruit_DHT.DHT11, config.local_sensor['gpio_port'])
+        
     if RH is not None and T is not None:
         return (str(RH), str(T))
     else:
