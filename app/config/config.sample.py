@@ -21,18 +21,22 @@ open_map = { 'host': 'api.openweathermap.org',
              'sleep_time_in_seconds_between_reads': 60.0*30,
               }
 
-local_sensor = { 'gpio_port': 23,
-                 'location_name': "Dining",
-                 'sleep_time_in_seconds_between_reads': 60.0,
-                  }
+local_sensors = { 'sleep_time_in_seconds_between_reads': 60.0,
+                  'sensors': [
+                    { 'gpio_port': 23,
+                      'location_name': 'Kitchen',
+                      'sensor_model': 'DHT22',
+                    }]
+                }
 
 presence_sensor = { 'sleep_time_in_seconds_between_reads': 60.0,
                      }
 
-remote_arduino_sensor = { 'gpio_port': 17,
+remote_arduino_sensors = [{ 'gpio_port': 17,
                           'location_name': "Room",
                           'sleep_time_in_seconds_between_reads': 60.0,
-                           }
+                          'pipes': [[0xE8, 0xE8, 0xF0, 0xF0, 0xE1], [0xF0, 0xF0, 0xF0, 0xF0, 0xE1]]
+                           }]
 
 runtime_variables = { 'debug' : True,
                       'log_format' : '%(asctime)s [%(levelname)s] (%(threadName)-10s) %(message)s',

@@ -26,14 +26,14 @@ logging.basicConfig(level=config.get_logging_level(),
 
 GPIO.setmode(GPIO.BCM)
 
-def get_local_sensor_data():
-    sensor_model = config.local_sensor['sensor_model']
+def get_local_sensor_data(sensor_config):
+    sensor_model = sensor_config['sensor_model']
     RH, T = None, None
-    if sensor_model = 'DHT22':
-        RH, T = Adafruit_DHT.read_retry(Adafruit_DHT.DHT22, config.local_sensor['gpio_port'])
-    if sensor_model = 'DHT11':
-        RH, T = Adafruit_DHT.read_retry(Adafruit_DHT.DHT11, config.local_sensor['gpio_port'])
-        
+    if sensor_model == 'DHT22':
+        RH, T = Adafruit_DHT.read_retry(Adafruit_DHT.DHT22, sensor_config['gpio_port'])
+    if sensor_model == 'DHT11':
+        RH, T = Adafruit_DHT.read_retry(Adafruit_DHT.DHT11, sensor_config['gpio_port'])
+
     if RH is not None and T is not None:
         return (str(RH), str(T))
     else:
@@ -45,13 +45,14 @@ def main():
     logging.info("Starting loop")
     try:
         while True:
-            now = datetime.datetime.utcnow()
+            for sensor in config.local_sensors['sensors']:
+                now = datetime.datetime.utcnow()
 
-            LRH, LT = get_local_sensor_data()
-            commonFunctions.save_humidity_data(config.local_sensor['location_name'], LRH, now.isoformat(), now.isoformat())
-            commonFunctions.save_temperature_data(config.local_sensor['location_name'], LT, now.isoformat(), now.isoformat())
+                LRH, LT = get_local_sensor_data(sensor)
+                commonFunctions.save_humidity_data(sensor['location_name'], LRH, now.isoformat(), now.isoformat())
+                commonFunctions.save_temperature_data(sensor['location_name'], LT, now.isoformat(), now.isoformat())
 
-            sleep(config.local_sensor['sleep_time_in_seconds_between_reads'])
+            sleep(config.local_sensors['sleep_time_in_seconds_between_reads'])
     except KeyboardInterrupt:
         logging.error("\nbye!")
         sys.exit(1)
