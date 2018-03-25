@@ -102,8 +102,11 @@
       };
 
       $scope.fillTemperatureList = function() {
-        for(var i=15.0;i<23;i=i+0.5){
-          $scope.temperatureList.push(i.toString());
+        var intervals = [0.0,0.1,0.3,0.5,0.7,0.9];
+        for(var baseInterval=15.0; baseInterval<23; baseInterval=baseInterval+1){
+          intervals.forEach(function(interval){
+            $scope.temperatureList.push((baseInterval+interval).toString());
+          });
         }
       };
       

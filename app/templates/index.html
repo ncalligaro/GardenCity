@@ -36,26 +36,54 @@
       </div>
     </div>
   </div>
-  
-  <!--div class="py-5">
+
+  <div class="py-4">
     <div class="container">
       <div class="row">
-        <div class="col-md-12">
-          <ul class="nav nav-pills">
-            <li class="nav-item">
-              <a href="/" class="active nav-link"> <i class="fa fa-home fa-home"></i>&nbsp;Home</a>
-            </li>
-            <!--li class="nav-item">
-              <a class="nav-link" href="#">Item</a>
-            </li>
-            <li class="nav-item">
-              <a href="#" class="nav-link">Item</a>
-            </li-->
-          </ul>
+        <div class="col-12">
+          <h2>Status</h2>
+          <hr class="mb-4"> 
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12">
+          <div class="alert" ng-class="isBoilerOn?'alert-warning':'alert-info'">
+            Current Boiler Status is <strong>{{ getIsBoilerOnLegend() }}</strong>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12">
+          <div class="alert" ng-class="isScheduleOverriden?'alert-warning':'alert-info'">
+            Schedule <strong>{{getIsScheduleOverridenStatusLegend()}}</strong> overriden
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12">
+          <div class="alert" ng-class="isCurrentScheduleOverriden?'alert-warning':'alert-info'">
+            Current Schedule is <strong>{{ getIsCurrentScheduleOverridenLegend() }}</strong>
+          </div>
+        </div>
+      </div>
+      <div class="row" ng-show="isAnScheduleActive()">
+        <div class="col-12">
+          <div class="progress">
+            <div class="progress-bar" role="progressbar" aria-valuenow="activeSchedulePercentage" aria-valuemin="0" aria-valuemax="100" style="width: {{activeSchedulePercentage}}%;">
+              {{activeSchedulePercentage}}%
+            </div>
+            <small class="form-text text-muted">Current Schedule Progress</small>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12">
+          <button type="submit" ng-click="getBoilerStatus()" class="btn btn-primary form-control">Refresh Now</button>
         </div>
       </div>
     </div>
-  </div-->
+  </div>
+
   <div class="py-5">
     <div class="container">
       <div class="row">
@@ -144,51 +172,7 @@
     </div>
   </div>
 
-  <div class="py-4">
-    <div class="container">
-      <div class="row">
-        <div class="col-12">
-          <h2>Status</h2>
-          <hr class="mb-4"> 
-        </div>
-      </div>
-      <div class="row" ng-show="isAnScheduleActive()">
-        <div class="col-12">
-          <div class="progress">
-            <div class="progress-bar" role="progressbar" aria-valuenow="activeSchedulePercentage" aria-valuemin="0" aria-valuemax="100" style="width: {{activeSchedulePercentage}}%;">
-              {{activeSchedulePercentage}}%
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-12">
-          <div class="alert" ng-class="isBoilerOn?'alert-warning':'alert-info'">
-            Current Boiler Status is <strong>{{ getIsBoilerOnLegend() }}</strong>
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-12">
-          <div class="alert" ng-class="isScheduleOverriden?'alert-warning':'alert-info'">
-            Schedule <strong>{{getIsScheduleOverridenStatusLegend()}}</strong> overriden
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-12">
-          <div class="alert" ng-class="isCurrentScheduleOverriden?'alert-warning':'alert-info'">
-            Current Schedule is <strong>{{ getIsCurrentScheduleOverridenLegend() }}</strong>
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-12">
-          <button type="submit" ng-click="getBoilerStatus()" class="btn btn-primary form-control">Refresh Now</button>
-        </div>
-      </div>
-    </div>
-  </div>
+
 
   <div class="py-6">
     <div class="container">
