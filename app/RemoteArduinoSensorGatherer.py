@@ -30,12 +30,14 @@ GPIO.setmode(GPIO.BCM)
 radio = NRF24(GPIO, spidev.SpiDev())
 
 def configure_radio():
-    pipes = [[0xE8, 0xE8, 0xF0, 0xF0, 0xE1], [0xF0, 0xF0, 0xF0, 0xF0, 0xE1]]
+    #pipes = [[0xE8, 0xE8, 0xF0, 0xF0, 0xE1], [0xF0, 0xF0, 0xF0, 0xF0, 0xE1]]
+    #pipes2 = [[0xE9, 0xE9, 0xF0, 0xF0, 0xE1], [0xF1, 0xF1, 0xF0, 0xF0, 0xE1]]
 
     radio.begin(0, config.remote_arduino_sensor['gpio_port'])
 
     radio.setPayloadSize(32)
     radio.setChannel(0x76)
+    #radio.setDataRate(NRF24.BR_250KBPS)
     radio.setDataRate(NRF24.BR_1MBPS)
     radio.setPALevel(NRF24.PA_MIN)
 
@@ -43,24 +45,39 @@ def configure_radio():
     radio.enableDynamicPayloads()
     radio.enableAckPayload()
 
-    radio.openWritingPipe(pipes[0])
-    radio.openReadingPipe(1, pipes[1])
+    for sensor in config.remote_arduino_sensor['sensors']:
+        #logging.debug("pipe index %s, is pipe w %s" % (sensor['pipes_index'][0], sensor['pipes'][0]))
+        logging.debug("pipe index %s, is pipe r %s" % (sensor['pipes_index'][1], sensor['pipes'][1]))
+        #radio.openWritingPipe(sensor['pipes_index'][0], sensor['pipes'][0])
+        #radio.openWritingPipe(sensor['pipes'][0])
+        radio.openReadingPipe(sensor['pipes_index'][1], sensor['pipes'][1])
+        #radio.openWritingPipe(1, pipes[0])
+        #radio.openReadingPipe(2, pipes[1])
+        #radio.openWritingPipe(3, pipes2[0])
+        #radio.openReadingPipe(4, pipes2[1])
+
+    logging.debug("Radio configured")
     #radio.printDetails()
     # radio.startListening()
 
-def get_remote_sensor_data():
+def get_remote_sensor_data(sensor_config):
     message = list("GETREADINGS")
     while len(message) < 32:
         message.append(0)
 
     start = time.time()
+    logging.debug("pipe index %s, is pipe w %s" % (sensor_config['pipes_index'][0], sensor_config['pipes'][0]))
+    radio.openWritingPipe(sensor_config['pipes'][0])
     radio.write(message)
     radio.startListening()
 
-    while not radio.available(0):
+    #is_available, pipe = radio.available_pipe()
+    #while not is_available and pipe == (sensor_config['pipes_index'][1]):
+    while not radio.available():
         time.sleep(1 / 100)
         if time.time() - start > 5: #Wait 5 seconds
             break
+        #is_available, pipe = radio.available_pipe()
 
     receivedMessage = []
     radio.read(receivedMessage, radio.getDynamicPayloadSize())
@@ -71,8 +88,12 @@ def get_remote_sensor_data():
         if (n >= 32 and n <= 126):
             string += chr(n)
     response = "{}".format(string)
+
+    logging.debug("read '%s' from index %s, and pipe %s" % (response, sensor_config['pipes_index'][1], sensor_config['pipes'][1]))
+    
     #T: 18.80 - H: 53.90O
     pattern = re.compile("T: (\d+.\d*) - H: (\d+.\d*)", re.IGNORECASE)
+    logging.debug("Got response from remote: %s" % response) 
     result = pattern.search(response)
     if result is None:
         radio.stopListening()
@@ -89,11 +110,13 @@ def main():
     try:
         configure_radio()
         while True:
-            now = datetime.datetime.utcnow()
+            for sensor in config.remote_arduino_sensor['sensors']:
+                now = datetime.datetime.utcnow()
 
-            RRH, RT = get_remote_sensor_data()
-            commonFunctions.save_humidity_data(config.remote_arduino_sensor['location_name'], RRH, now.isoformat(), now.isoformat())
-            commonFunctions.save_temperature_data(config.remote_arduino_sensor['location_name'], RT, now.isoformat(), now.isoformat())
+                RRH, RT = get_remote_sensor_data(sensor)
+                commonFunctions.save_humidity_data(sensor['location_name'], RRH, now.isoformat(), now.isoformat())
+                commonFunctions.save_temperature_data(sensor['location_name'], RT, now.isoformat(), now.isoformat())
+                logging.debug("Read Temp %s and Humidity %s from Remote %s" % (RT, RRH, sensor['location_name']))
             
             sleep(config.remote_arduino_sensor['sleep_time_in_seconds_between_reads'])
     except KeyboardInterrupt:
