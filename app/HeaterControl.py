@@ -221,11 +221,21 @@ def calculate_new_boiler_state_on_temperature(is_boiler_on):
         location = current_schedule['targetPlace']
     current_avg_temperature_dining = get_current_avg_temperature_for(location, avg_time_period_mins)
     logging.debug('average temperature past %s minutes in %s is %s' % (avg_time_period_mins, location, current_avg_temperature_dining))
+    
+    if current_avg_temperature_dining is None:
+        location = 'Dining'
+        current_avg_temperature_dining = get_current_avg_temperature_for(location, avg_time_period_mins)
+        logging.debug('average temperature past %s minutes in %s is %s' % (avg_time_period_mins, location, current_avg_temperature_dining))
+        
     if current_avg_temperature_dining is None:
         logging.error('Unable to read %s temperature' % location)
         return False, '.6', ('Unable to read %s temperature' % location)
     
     temperature = current_avg_temperature_dining['temperature']
+    if temperature is None:
+        logging.error('Unable to read %s temperature' % location)
+        return False, '.6', ('Unable to read %s temperature' % location)
+        
     if not current_schedule:
         logging.debug('There is no schedule active at this moment. Using default temperature %s' % (config.boiler['default_temperature']))
         if is_temperature_within_margin(config.boiler['default_temperature'], config.boiler['temperature_margin'], temperature, is_boiler_on):
