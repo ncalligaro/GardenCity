@@ -8,6 +8,7 @@
 RF24 radio(9, 10);
 int pinDHT22 = A0;
 SimpleDHT22 dht22;
+SimpleDHT11 dht11;
 
 void setup(void){
 //  while(!Serial);
@@ -16,7 +17,8 @@ void setup(void){
   radio.begin();
   radio.setPALevel(RF24_PA_MIN);
   radio.setChannel(0x76);
-  radio.openWritingPipe(0xF0F0F0F0E1LL);
+  radio.openWritingPipe(0xF1F1F0F0E1LL);
+  //const uint64_t pipe = (0xE9E9F0F0E1LL);
   const uint64_t pipe = (0xE8E8F0F0E1LL);
   radio.openReadingPipe(1, pipe);
  
@@ -42,7 +44,7 @@ void loop(void){
       float temperature = 0;
       float humidity = 0;
       int err = SimpleDHTErrSuccess;
-      if ((err = dht22.read2(pinDHT22, &temperature, &humidity, NULL)) != SimpleDHTErrSuccess) {
+      if ((err = dht11.read2(pinDHT22, &temperature, &humidity, NULL)) != SimpleDHTErrSuccess) {
         //Serial.print("Read DHT22 failed, err="); Serial.println(err);delay(1000);
         //return;
         Serial.println("Error reading values from sensor");
