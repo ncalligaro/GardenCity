@@ -1,0 +1,23 @@
+{
+  "is_system_on": true,
+  "system_mode": "schedule",
+  "boiler_status": {
+    "schedule_overriden_started": null,
+    "last_scheduled_value": true,
+    "manual_location": "Dining",
+    "is_current_schedule_overriden": false,
+    "is_boiler_on": true,
+    "maintain_temperature": true,
+    "manual_temperature": 20.7,
+    "schedule_overriden_time": 1.5
+  },
+  "available_places": [
+    "Room",
+    "Dining",
+    "city_London",
+    "Kitchen",
+    "RoomS",
+    "Kitchen2"
+  ],
+  "temperature_margin": 0.3
+}

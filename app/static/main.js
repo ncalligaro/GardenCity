@@ -1,21 +1,35 @@
 (function () {
   'use strict';
 
-  angular.module('HeaterApp', ['moment-picker'])
+  angular.module('HeaterApp', ['moment-picker','ui.toggle'])
 
   .controller('HeaterController', ['$scope', '$log', '$http', 
     function($scope, $log, $http) {
 
+      $scope.isSystemOn = false;
       $scope.isBoilerOn = false;
+      $scope.systemMode = null;
+      $scope.manualTemperature = 20.7;
+      $scope.manualLocation = 'Dining';
+      $scope.maintainTemperature = false;
+      $scope.scheduleOverridenStarted = null;
       $scope.isCurrentScheduleOverriden = false;
-      $scope.isScheduleOverriden = false;
+      $scope.scheduleOverridenTime = 1;
       $scope.schedules = [];
-      $scope.newSchedule = { 'fromTime':'17:00', 'toTime':'23:55', 'dayOfWeek': '0', 'targetTemperature': '20.5', 'targetPlace': 'Dining' };
+      $scope.newSchedule = { 'fromTime':'17:00', 'toTime':'23:55', 'dayOfWeek': '0', 'targetTemperature': 20.7, 'targetPlace': 'Dining' };
       $scope.temperatureList = [];
       $scope.currentTemperatures = [];
       $scope.availablePlaces = ['Room','Dining','city_London','Kitchen'];
       $scope.activeSchedule = null;
       $scope.activeSchedulePercentage = 0;
+
+      $scope.isManualModeEnabled = function(){
+        return $scope.systemMode == 'manual';
+      };
+
+      $scope.isScheduleModeEnabled = function(){
+        return $scope.systemMode == 'schedule';
+      };
 
       $scope.currentDayOfWeekInPython = function(){
         var dayIndex = (new Date()).getDay();
@@ -100,15 +114,6 @@
             $scope.getActiveSchedule();
           })
       };
-
-      $scope.fillTemperatureList = function() {
-        var intervals = [0.0,0.1,0.3,0.5,0.7,0.9];
-        for(var baseInterval=15.0; baseInterval<23; baseInterval=baseInterval+1){
-          intervals.forEach(function(interval){
-            $scope.temperatureList.push((baseInterval+interval).toString());
-          });
-        }
-      };
       
       $scope.deleteSchedule = function(schedule){
         $scope.updateFormWithData(schedule);
@@ -133,49 +138,112 @@
         $scope.newSchedule['targetPlace'] = schedule['targetPlace'];
       };
 
-      $scope.toggleBoiler = function() {
-        $scope.isBoilerOn = !$scope.isBoilerOn;
-        $scope.isCurrentScheduleOverriden = true;
-        $scope.updateBoilerStatus();
+      $scope.getOverrideTimeEndDate = function(){
+        if ($scope.isCurrentScheduleOverriden){
+          if ($scope.scheduleOverridenStarted != null){
+            var endDate = new Date();
+            endDate.setTime($scope.scheduleOverridenStarted.getTime() + ($scope.scheduleOverridenTime *60*60*1000)); 
+            return endDate;
+          } 
+          return "N/A";
+        }
+        return "N/A";
       };
 
-      $scope.toggleIsScheduleOverriden = function() {
-        $scope.isScheduleOverriden = !$scope.isScheduleOverriden;
-        if (! $scope.isScheduleOverriden ){
-          $scope.isCurrentScheduleOverriden = false;
+      $scope.toggleOverrideSchedule = function() {
+        if ($scope.isCurrentScheduleOverriden){
+          $scope.scheduleOverridenStarted = new Date();  
+        } else {
+          $scope.scheduleOverridenStarted = null;
         }
-        $scope.updateBoilerStatus();
+        $scope.updateOverridenStartedDate();
+        $scope.setBoilerStatus();
+      };
+      
+      $scope.updateOverridenStartedDate = function() {
+        var overridenDate = {};
+        overridenDate.scheduleOverridenStarted = ($scope.scheduleOverridenStarted==null?null:$scope.scheduleOverridenStarted.getTime());
+
+        $http.put('/heater/overridenDate', overridenDate)
+        .success(function(response){
+          $scope.getBoilerStatus();
+        })
+      };
+
+      $scope.toggleMantainTemperature = function() {
+        $scope.setBoilerStatus();
+      };
+
+      $scope.toggleSystem = function() {
+        $scope.setBoilerStatus();
+      };
+
+      $scope.toggleBoiler = function() {
+        $scope.setBoilerStatus();
       };
       
       $scope.getBoilerStatus = function() {
-          $http.get('/heater/status')
-          .success(function(response){
-            $scope.isBoilerOn = response.isBoilerOn;
-            $scope.isScheduleOverriden = response.isScheduleOverriden;
-          })
-      };
-
-      $scope.updateBoilerStatus = function() {
-        var boilerStatus = {};
-        boilerStatus.isBoilerOn = $scope.isBoilerOn;
-        boilerStatus.isScheduleOverriden = $scope.isScheduleOverriden;
-        boilerStatus.isCurrentScheduleOverriden = $scope.isCurrentScheduleOverriden;
-
-        $http.put('/heater/status', boilerStatus)
+        $scope.getMode();
+        $http.get('/heater/status')
         .success(function(response){
+          $scope.isSystemOn = response.isSystemOn;
+          $scope.maintainTemperature = response.maintainTemperature;
+          $scope.manualLocation = response.manualLocation;
+          $scope.manualTemperature = response.manualTemperature;
+          $scope.scheduleOverridenStarted = (response.scheduleOverridenStarted==null?null:new Date(response.scheduleOverridenStarted));
+          $scope.scheduleOverridenTime = response.scheduleOverridenTime;
           $scope.isBoilerOn = response.isBoilerOn;
-          $scope.isScheduleOverriden = response.isScheduleOverriden;
           $scope.isCurrentScheduleOverriden = response.isCurrentScheduleOverriden;
         })
       };
 
+      $scope.setSystemStatus = function() {
+        $http.post('/system/status', {'isSystemOn' : $scope.isSystemOn})
+        .success(function(response){
+          $scope.getBoilerStatus();
+        })
+      };
+
+      $scope.getSystemStatus = function(){
+        $http.get('/system/status')
+        .success(function(response){
+          $scope.isSystemOn = response.isSystemOn;
+        })
+      };
+
+      $scope.updateSystemValues = function(){
+        $scope.setBoilerStatus();
+      }
+
+      $scope.setBoilerStatus = function() {
+        var boilerStatus = {};
+        boilerStatus.isSystemOn = $scope.isSystemOn;
+        boilerStatus.maintainTemperature = $scope.maintainTemperature;
+        boilerStatus.manualLocation = $scope.manualLocation;
+        boilerStatus.manualTemperature = $scope.manualTemperature;
+        //boilerStatus.scheduleOverridenStarted = ($scope.scheduleOverridenStarted==null?null:$scope.scheduleOverridenStarted.getTime());
+        boilerStatus.scheduleOverridenTime = $scope.scheduleOverridenTime;
+        boilerStatus.isCurrentScheduleOverriden = $scope.isCurrentScheduleOverriden;
+
+        $http.put('/heater/status', boilerStatus)
+        .success(function(response){
+          $scope.getBoilerStatus();
+        })
+      };
+
       $scope.isPlaceDrivingTemperature = function(place){
-        if ($scope.activeSchedule == null || typeof $scope.activeSchedule.targetPlace === 'undefined') {
-          return (place == 'Dining');
+        if ($scope.isManualModeEnabled()){
+          return $scope.manualLocation == place;
         }
-        if ($scope.activeSchedule.targetPlace == place){
-          return true;
+        if ($scope.isScheduleModeEnabled()){
+          if ($scope.activeSchedule == null || typeof $scope.activeSchedule.targetPlace === 'undefined') {
+            return false;
+          }
+          if ($scope.activeSchedule.targetPlace == place){
+            return true;
+          }  
         }
+        
         return false;
       };
 
@@ -191,12 +259,6 @@
         return isCurrentScheduleOverridenLegendLegend;
       };
 
-      $scope.getIsScheduleOverridenStatusLegend = function() {
-        var isScheduleOverridenLegend = "is not";
-        $scope.isScheduleOverriden && (isScheduleOverridenLegend = "is");
-        return isScheduleOverridenLegend;
-      };
-
       $scope.isSameSchedule = function(schedule1, schedule2) {
         if (typeof schedule1 === undefined || typeof schedule2 === undefined){
           return false;
@@ -205,6 +267,27 @@
           return false;
         }
         return (schedule1.dayOfWeek == schedule2.dayOfWeek && schedule1.fromTime == schedule2.fromTime && schedule1.toTime == schedule2.toTime);
+      };
+
+      $scope.setMode = function(mode){
+        $scope.systemMode = mode;
+        console.log(mode);
+        if ($scope.isScheduleModeEnabled()){
+          console.log("wtf");
+          $scope.isCurrentScheduleOverriden = false;
+        }
+        $http.post('/system/mode', {'mode' : $scope.systemMode})
+        .success(function(response){
+          $scope.getMode();
+          $scope.getBoilerStatus();
+        })
+      };
+
+      $scope.getMode = function(){
+        $http.get('/system/mode')
+          .success(function(response){
+            $scope.systemMode = response['mode'];
+          })
       };
 
       $scope.getActiveSchedule = function() {
@@ -216,12 +299,16 @@
       };
 
       //Executing functions at startup
-      $scope.fillTemperatureList();
-      $scope.getSchedules();
-      $scope.getBoilerStatus();
-      $scope.fetchCurrentTemperatures();
-      $scope.fetchPlaces();
-      $scope.newSchedule.dayOfWeek = $scope.currentDayOfWeekInPython();
+       $scope.$evalAsync(
+          function( $scope ) {
+              $scope.getSystemStatus();
+              $scope.getSchedules();
+              $scope.getBoilerStatus();
+              $scope.fetchCurrentTemperatures();
+              $scope.fetchPlaces();
+              $scope.newSchedule.dayOfWeek = $scope.currentDayOfWeekInPython();
+          }
+      );
       setInterval(function(){
         $scope.getBoilerStatus();
         $scope.fetchCurrentTemperatures();

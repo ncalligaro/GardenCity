@@ -13,6 +13,8 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/github.min.css') }}" type="text/css">
+  <link href="{{ url_for('static', filename='css/angular-bootstrap-toggle.min.css') }}" rel="stylesheet">
+  <script src="{{ url_for('static', filename='js/angular-bootstrap-toggle.min.js') }}"></script>
   <!--link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}" type="text/css"-->
   <!--link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-theme.css') }}" type="text/css"-->
   <!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/angular-clockpicker.css') }}" type="text/css"> -->
@@ -22,10 +24,12 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/angular-moment-picker.css') }}" type="text/css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
   <script src="{{ url_for('static', filename='main.js') }}"></script>
+  <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.png') }}">
+
 
 </head>
+{% raw %}
 <body ng-controller="HeaterController">
-  {% raw %}
   <div class="py-5 text-center">
     <div class="container">
       <div class="row">
@@ -37,58 +41,27 @@
     </div>
   </div>
 
-  <div class="py-4">
+
+  <div class="py-4" ng-show="errors != null && errors.length != 0">
     <div class="container">
       <div class="row">
         <div class="col-12">
-          <h2>Status</h2>
-          <hr class="mb-4"> 
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-12">
-          <div class="alert" ng-class="isBoilerOn?'alert-warning':'alert-info'">
-            Current Boiler Status is <strong>{{ getIsBoilerOnLegend() }}</strong>
+          <div class="alert alert-danger">
+            {{errors}}
           </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-12">
-          <div class="alert" ng-class="isScheduleOverriden?'alert-warning':'alert-info'">
-            Schedule <strong>{{getIsScheduleOverridenStatusLegend()}}</strong> overriden
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-12">
-          <div class="alert" ng-class="isCurrentScheduleOverriden?'alert-warning':'alert-info'">
-            Current Schedule is <strong>{{ getIsCurrentScheduleOverridenLegend() }}</strong>
-          </div>
-        </div>
-      </div>
-      <div class="row" ng-show="isAnScheduleActive()">
-        <div class="col-12">
-          <div class="progress">
-            <div class="progress-bar" role="progressbar" aria-valuenow="activeSchedulePercentage" aria-valuemin="0" aria-valuemax="100" style="width: {{activeSchedulePercentage}}%;">
-              {{activeSchedulePercentage}}%
-            </div>
-            <small class="form-text text-muted">Current Schedule Progress</small>
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-12">
-          <button type="submit" ng-click="getBoilerStatus()" class="btn btn-primary form-control">Refresh Now</button>
         </div>
       </div>
     </div>
   </div>
 
+
   <div class="py-5">
     <div class="container">
       <div class="row">
         <div class="col-12">
-          <h2>Current Temperatures</h2>
+          {% endraw %}
+          <h2>Current Temperatures <button class="btn"><img class="img" width="20" ng-click="fetchCurrentTemperatures()" src="{{ url_for('static', filename='images/refresh.png') }}"/></button></h2> 
+          {% raw %}
           <hr class="mb-4"> 
         </div>
       </div>
@@ -103,78 +76,90 @@
   </div>
 
 
-  <!--div class="py-5" style=>
+  <div class="py-4">
     <div class="container">
       <div class="row">
         <div class="col-12">
-          <h2>Desired Temperatures</h2>
+          {% endraw %}
+          <h2>Status <button class="btn"><img class="img" width="20" ng-click="getBoilerStatus()" src="{{ url_for('static', filename='images/refresh.png') }}"/></button></h2> 
+          {% raw %}
           <hr class="mb-4"> 
         </div>
       </div>
       <div class="row">
-        <div class="col-md-3 p-3">
-          <div class="alert alert-info">
-            Living Room: 22 C
-          </div>
+        <div class="col-md-3">
+          <h4>System is</h4>
         </div>
-        <div class="col-md-3 p-3">
-          <div class="alert alert-info">
-            Bed Room: 19 C
-          </div>
+        <div class="col-md-3">
+          <toggle id="boilerStatus" ng-model="isSystemOn" ng-change="toggleSystem()" on="On" off="Off" onstyle="btn-success" offstyle="btn-danger"></toggle>
         </div>
-        <div class="col-md-3 p-3">
-          <div class="alert alert-info">
-            Kitchen Room: 19.5 C
-          </div>
+        <div class="col-md-3">
+          <h4>Boiler is</h4>
         </div>
-        <div class="col-md-3 p-3">
-          <div class="alert alert-info">
-            London Room: 5.1 C
+        <div class="col-md-3">
+          <toggle ng-disabled="true" id="boilerStatus" ng-model="isBoilerOn" on="Burning" off="Snoozing" onstyle="btn-success" offstyle="btn-danger"></toggle>
+        </div>
+      </div>
+      <div class="row" ng-show="isSystemOn">
+        <div class="col-md-3">
+          <h4>System Mode</h4>
+        </div>
+        <div class="col-md-3">
+          <div class="btn-group" role="group" aria-label="...">
+            <button type="button" class="btn btn-default" ng-class="isManualModeEnabled()?'active':''" ng-click="setMode('manual')">Manual</button>
+            <button type="button" class="btn btn-default" ng-class="isScheduleModeEnabled()?'active':''" ng-click="setMode('schedule')">Schedule</button>
           </div>
         </div>
       </div>
-    </div>
-  </div-->
-
-  <div class="py-4" ng-show="errors != null && errors.length != 0">
-    <div class="container">
-      <div class="row">
-        <div class="col-12">
-          <div class="alert alert-danger">
-            {{errors}}
-          </div>
+      <div class="row" ng-show="isSystemOn && isScheduleModeEnabled()">
+        <div class="col-md-3">
+          <h4>Snooze schedule?</h4>
+          <small ng-show="isSystemOn && isScheduleModeEnabled() && isCurrentScheduleOverriden" class="form-text text-muted">til {{getOverrideTimeEndDate() | date : 'yyyy-MM-dd HH:mm'}}</small>
+        </div>
+        <div class="col-md-3">
+          <toggle id="boilerStatus" ng-model="isCurrentScheduleOverriden" ng-change="toggleOverrideSchedule()" on="Yes" off="No" onstyle="btn-warning" offstyle="btn-success"></toggle>
+        </div>
+      </div>
+      <div class="row" ng-show="isSystemOn && isScheduleModeEnabled() && isCurrentScheduleOverriden">
+        <div class="col-md-3">
+          <h4>Snooze for</h4><small class="form-text text-muted">(hours)</small>
+        </div>
+        <div class="col-md-3">
+          <input class="form-control" type="number" ng-model="scheduleOverridenTime" ng-change="updateSystemValues()" min="0" max="24" step="0.5"/>
+        </div>
+      </div>
+      <div class="row" ng-show="isSystemOn && (isManualModeEnabled() || isScheduleModeEnabled() && isCurrentScheduleOverriden)">
+        <div class="col-md-3">
+          <h4>Maintain temperature?</h4>
+        </div>
+        <div class="col-md-3">
+          <toggle ng-disabled="!(isManualModeEnabled() || isScheduleModeEnabled() && isCurrentScheduleOverriden)" id="maintainTemperature" ng-model="maintainTemperature" ng-change="toggleMantainTemperature()" on="Yes" off="No" onstyle="btn-success" offstyle="btn-danger"></toggle>
+        </div>
+      </div>
+      <div class="row" ng-show="isSystemOn && (isManualModeEnabled() || isScheduleModeEnabled() && isCurrentScheduleOverriden)">
+        <div class="col-md-3">
+          <h4>Target Temperature</h4>
+        </div>
+        <div class="col-md-3">
+          <input class="form-control" type="number" ng-model="manualTemperature" ng-change="updateSystemValues()" min="13" max="30" step="0.1"/>
+        </div>
+      </div>
+      <div class="row" ng-show="isSystemOn && (isManualModeEnabled() || isScheduleModeEnabled() && isCurrentScheduleOverriden)">
+        <div class="col-md-3">
+          <h4>Room Driving temperature</h4>
+        </div>
+        <div class="col-md-3">
+            <select class="form-control" name="manualLocation" 
+                ng-model="manualLocation"
+                ng-change="updateSystemValues()"
+                ng-options="place for place in availablePlaces">
+            </select>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="py-5">
-    <div class="container">
-      <div class="row">
-        <div class="col-12">
-          <h2>Commands</h2>
-          <hr class="mb-4"> </div>
-      </div>
-      <div class="row">
-        <div class="col-md-6 p-3">
-          <div class="form-group my-3">
-            <button type="submit" ng-click="toggleBoiler()" class="btn btn-primary form-control">Toggle Boiler</button>
-            <small class="form-text text-muted">Until next schedule event</small>
-          </div>
-        </div>
-        <div class="col-md-6 p-3">
-          <div class="form-group my-3">
-            <button type="submit" ng-click="toggleIsScheduleOverriden()" class="btn btn-warning form-control">Override Schedule</button>
-            <small class="form-text text-muted">Until manual release</small>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-
-
-  <div class="py-6">
+  <div class="py-6" ng-show="isSystemOn">
     <div class="container">
       <div class="row">
         <div class="col-12">
@@ -236,12 +221,7 @@
             <small id="toTimeHelp" class="form-text text-muted">End time</small>
           </div>
           <div class="form-group my-3">
-            <select class="form-control" name="targetTemperature" 
-                ng-model="newSchedule.targetTemperature"
-                ng-change=""
-                ng-options="temperature for temperature in temperatureList">
-            </select>
-
+            <input class="form-control" type="number" name="targetTemperature" ng-model="newSchedule.targetTemperature" min="13" max="30" step="0.1"/>
             <small id="targetTemperatureHelp" class="form-text text-muted">Desired temperature in selected room</small>
           </div>
           <div class="form-group my-3">
@@ -258,6 +238,6 @@
       </div>
     </div>
   </div>
-
+</body>
 {% endraw %}
-</body></html>
+</html>
