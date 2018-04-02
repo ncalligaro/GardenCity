@@ -3,6 +3,7 @@ Allows to manage
 
 
 #Setup:
+sudo apt-get install python{,3}-pip 
 #pip search mysql
 pip install mysql-connector-python
 #If the previous does not work use this instead:
@@ -18,6 +19,8 @@ rm -r Adafruit_Python_DHT
 pip install Flask
 pip install pyping
 pip install tinydb
+sudo pip install pytz
+
 #mkdir -p ~/.config/systemd/user/
 #cp scripts/gardenCity.service ~/.config/systemd/user/
 #chmod +x ~/.config/systemd/user/gardenCity.service
