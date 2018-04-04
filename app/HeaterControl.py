@@ -412,7 +412,7 @@ def setup_relay_port():
     GPIO.output(config.boiler['gpio_port'], GPIO.LOW)  
 
 def action_boiler_relay(is_relay_on):
-    GPIO.setup(config.boiler['gpio_port'], GPIO.OUT)
+    #GPIO.setup(config.boiler['gpio_port'], GPIO.OUT)
     if is_relay_on:
         logging.debug("Turned on relay port")
         GPIO.output(config.boiler['gpio_port'], GPIO.HIGH)  
