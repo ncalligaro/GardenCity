@@ -15,20 +15,25 @@ logging.basicConfig(level=config.get_logging_level(),
 
 
 runtime_config = ConfigParser.ConfigParser()
-runtime_config_file_path = 'config/runtimeSettings.json'
-schedule_config_file_path = 'config/schedulesDB.json'
+RUNTIME_CONFIG_FILE_PATH = 'config/runtimeSettings.json'
+SCHEDULE_CONFIG_FILE_PATH = 'config/schedulesDB.json'
+CLIENT_SECRETS_FILE = "config/client_secret.json"
 
 def get_runtime_config():
-  with open(runtime_config_file_path, 'r') as f:
+  with open(RUNTIME_CONFIG_FILE_PATH, 'r') as f:
     runtime_config = json.load(f)
     return runtime_config
 
 def save_runtime_config(newConfig):
-  with open(runtime_config_file_path, 'w') as f:
+  with open(RUNTIME_CONFIG_FILE_PATH, 'w') as f:
     json.dump(newConfig, f)
   return get_runtime_config()
 
-def getScheduleTable():
-  db = TinyDB(schedule_config_file_path)
+def get_schedule_table():
+  db = TinyDB(SCHEDULE_CONFIG_FILE_PATH)
   return db.table('schedules')  
 
+def get_client_secret():
+  with open(CLIENT_SECRETS_FILE, 'r') as f:
+    client_secret = json.load(f)
+    return client_secret['web']['client_secret']

@@ -44,3 +44,5 @@ Y codes:
 .5 Using default temperature %s. Temperature within margin. Boiler needs to be on
 .6 Unable to read %s temperature
 .7 Unable to read avg %s temperature
+
+Make sure I2C and SPI are disabled in raspi-config or depending of the outputs used it may cause issues

@@ -1,5 +1,6 @@
 app/config/config_*.py
 app/config/config.py
+**/client_secret.json
 app/config/runtimeSettings.json
 app/config/schedulesDB.json
 app/config/schedulesDB_*.json

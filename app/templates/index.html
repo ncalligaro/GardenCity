@@ -6,7 +6,7 @@
   <title>Heat Control</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" type="text/css">
   <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular.min.js"></script>
-  <script src="http://code.jquery.com/jquery-3.2.1.js" integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE=" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.2.1.js" integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE=" crossorigin="anonymous"></script>
   <!--script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script-->
   <!--link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.css') }}" type="text/css"-->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
@@ -25,7 +25,15 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
   <script src="{{ url_for('static', filename='main.js') }}"></script>
   <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.png') }}">
+  <style>
+  .profile-picture {
+    max-height: 50px;
+  }
 
+  .profile-block {
+    padding: 8px 5px 8px 5px;
+  }
+  </style>
 
 </head>
 {% raw %}
@@ -33,14 +41,26 @@
   <div class="py-5 text-center">
     <div class="container">
       <div class="row">
-        <div class="col-12">
+        <div class="col-md-9">
           <h1 class="display-3">Heat Control</h1>
           <p class="lead text-muted">Manage your boiler</p>
+        </div>
+        <div class="col-md-3">
+          <div class="alert alert-info col-md-4 col-md-offset-8 profile-block">
+            <div>
+              <img class="img-responsive img-circle center-block profile-picture" src="{{user.picture}}"/>
+            </div>
+            <div>
+              <small class="text-center">{{user.name}}</small>
+            </div>
+            <div>
+              <a href="/logout"><span class="glyphicon glyphicon-log-out"></span></a>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
-
 
   <div class="py-4" ng-show="errors != null && errors.length != 0">
     <div class="container">
@@ -53,6 +73,16 @@
       </div>
     </div>
   </div>
+  
+  <div class="py-4">
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+            
+        </div>
+      </div>
+    </div>
+  </div>
 
 
   <div class="py-5">
@@ -60,7 +90,7 @@
       <div class="row">
         <div class="col-12">
           {% endraw %}
-          <h2>Current Temperatures <button class="btn"><img class="img" width="20" ng-click="fetchCurrentTemperatures()" src="{{ url_for('static', filename='images/refresh.png') }}"/></button></h2> 
+          <h3>Current Temperatures <button class="btn"><img class="img" width="20" ng-click="fetchCurrentTemperatures()" src="{{ url_for('static', filename='images/refresh.png') }}"/></button></h3> 
           {% raw %}
           <hr class="mb-4"> 
         </div>
@@ -81,7 +111,7 @@
       <div class="row">
         <div class="col-12">
           {% endraw %}
-          <h2>Status <button class="btn"><img class="img" width="20" ng-click="getBoilerStatus()" src="{{ url_for('static', filename='images/refresh.png') }}"/></button></h2> 
+          <h3>Status <button class="btn"><img class="img" width="20" ng-click="getBoilerStatus()" src="{{ url_for('static', filename='images/refresh.png') }}"/></button></h3> 
           {% raw %}
           <hr class="mb-4"> 
         </div>
@@ -163,7 +193,7 @@
     <div class="container">
       <div class="row">
         <div class="col-12">
-          <h2>Schedule</h2>
+          <h3>Schedule</h3>
           <hr class="mb-4"> </div>
       </div>
       <div class="row">

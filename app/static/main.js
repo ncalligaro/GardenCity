@@ -9,6 +9,7 @@
       $scope.isSystemOn = false;
       $scope.isBoilerOn = false;
       $scope.systemMode = null;
+      $scope.user = {};
       $scope.manualTemperature = 20.7;
       $scope.manualLocation = 'Dining';
       $scope.maintainTemperature = false;
@@ -298,9 +299,18 @@
           })
       };
 
+      $scope.fetchUsername = function() {
+        $http.get('/user')
+          .success(function(response){
+            console.log(response)
+            $scope.user = response;
+          })
+      };
+
       //Executing functions at startup
        $scope.$evalAsync(
           function( $scope ) {
+              $scope.fetchUsername();
               $scope.getSystemStatus();
               $scope.getSchedules();
               $scope.getBoilerStatus();

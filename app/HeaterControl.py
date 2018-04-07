@@ -6,19 +6,20 @@ import configFunctions
 
 import os
 import requests
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, Response, session
+import flask
+
+from functools import wraps
 
 from tinydb import TinyDB, Query, where
-# import serial
 from datetime import datetime
 from datetime import timedelta 
 import pytz
 
 import time
-# import re
+
 import traceback
-# import httplib
-# import urllib
+
 import json
 import calendar
 from decimal import Decimal
@@ -29,8 +30,17 @@ import logging
 
 import sys
 import RPi.GPIO as GPIO
+
+import google.oauth2.credentials
+import google_auth_oauthlib.flow
+import googleapiclient.discovery
+
 # from lib_nrf24 import NRF24
 # import spidev
+# import serial
+# import re
+# import httplib
+# import urllib
 
 logging.basicConfig(level=config.get_logging_level(),
                     format=config.runtime_variables['log_format'],
@@ -40,7 +50,11 @@ GPIO.setmode(GPIO.BCM)
 
 app = Flask(__name__)
 app.logger.setLevel(logging.ERROR)
+app.secret_key = configFunctions.get_client_secret()
 
+SCOPES = ['email', 'openid']
+
+#Keys
 IS_SYSTEM_ON_KEY = 'is_system_on'
 IS_SYSTEM_ON_JSON_KEY = 'isSystemOn'
 IS_BOILER_ON_KEY = 'is_boiler_on'
@@ -55,6 +69,7 @@ SCHEDULE_OVERRIDEN_TIME_KEY = 'schedule_overriden_time'
 SCHEDULE_OVERRIDEN_TIME_JSON_KEY = 'scheduleOverridenTime'
 SCHEDULE_OVERRIDEN_STARTED_KEY = 'schedule_overriden_started'
 SCHEDULE_OVERRIDEN_STARTED_JSON_KEY = 'scheduleOverridenStarted'
+ALLOWED_LOGINS_KEY = 'allowed_logins'
 
 MAINTAIN_TEMPERATURE_KEY = 'maintain_temperature'
 MAINTAIN_TEMPERATURE_JSON_KEY = 'maintainTemperature'
@@ -84,14 +99,143 @@ MAX_AGE_JSON_KEY = 'maxAge'
 
 #db = TinyDB('db.json')
 #schedule_table = db.table('schedules')
-schedule_table = configFunctions.getScheduleTable()
+schedule_table = configFunctions.get_schedule_table()
 runtime_config = configFunctions.get_runtime_config()
 
+def requires_user_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if 'credentials' not in flask.session:
+            logging.debug("User session not initiated")
+            return authorize()
+        if flask.session['user_data']['email'] not in runtime_config[ALLOWED_LOGINS_KEY]:
+            logging.debug("User %s not allowed" % flask.session['user_data']['email'])
+            return user_unathorized()
+        logging.debug("User %s is allowed" % flask.session['user_data']['email'])
+        return f(*args, **kwargs)
+    return decorated
+
+def user_unathorized():
+    return Response(
+    'Your google email is not authorized.\n'
+    'You have to login with proper credentials', 401)
+
+def unathorized():
+    return Response(
+    'Your google email is not authorized.\n'
+    'You have to login with proper credentials', 401)
+
+def requires_service_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if 'credentials' not in flask.session:
+            logging.debug("User session not initiated")
+            return unathorized()
+        if flask.session['user_data']['email'] not in runtime_config[ALLOWED_LOGINS_KEY]:
+            logging.debug("User %s not allowed" % flask.session['user_data']['email'])
+            return unathorized()
+        logging.debug("User %s is allowed" % flask.session['user_data']['email'])
+        return f(*args, **kwargs)
+    return decorated
+
+
 @app.route('/', methods=['GET'])
+@requires_user_auth
 def index():
     return render_template('index.html')
 
+@app.route('/authorize')
+def authorize():
+  # Create flow instance to manage the OAuth 2.0 Authorization Grant Flow steps.
+  logging.debug("Initiating user authentication")
+  flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+      configFunctions.CLIENT_SECRETS_FILE, scopes=SCOPES)
+
+  flow.redirect_uri = flask.url_for('oauth2callback', _external=True)
+
+  authorization_url, state = flow.authorization_url(
+      # Enable offline access so that you can refresh an access token without
+      # re-prompting the user for permission. Recommended for web server apps.
+      access_type='offline',
+      # Enable incremental authorization. Recommended as a best practice.
+      include_granted_scopes='true')
+
+  # Store the state so the callback can verify the auth server response.
+  flask.session['state'] = state
+  return flask.redirect(authorization_url)
+
+
+@app.route('/oauth2callback')
+def oauth2callback():
+  # Specify the state when creating the flow in the callback so that it can
+  # verified in the authorization server response.
+  state = flask.session['state']
+
+  flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+      configFunctions.CLIENT_SECRETS_FILE, scopes=SCOPES, state=state)
+  flow.redirect_uri = flask.url_for('oauth2callback', _external=True)
+
+  # Use the authorization server's response to fetch the OAuth 2.0 tokens.
+  authorization_response = flask.request.url
+  flow.fetch_token(authorization_response=authorization_response)
+  
+  google_session = flow.authorized_session()
+  #print google_session.get('https://www.googleapis.com/userinfo/v2/me').json()
+  flask.session['user_data'] = google_session.get('https://www.googleapis.com/userinfo/v2/me').json()
+
+  # Store credentials in the session.
+  # ACTION ITEM: In a production app, you likely want to save these
+  #              credentials in a persistent database instead.
+  credentials = flow.credentials
+  flask.session['credentials'] = credentials_to_dict(credentials)
+
+  return flask.redirect(flask.url_for('index'))
+
+@app.route('/logout')
+def logout():
+    revoke()
+    clear_credentials()
+    return flask.redirect(flask.url_for('logout_success'))    
+
+@app.route('/logoutSuccess')
+def logout_success():
+    return "Logout Success"
+
+@app.route('/revoke')
+def revoke():
+  if 'credentials' not in flask.session:
+    return ('You need to <a href="/authorize">authorize</a> before ' +
+            'testing the code to revoke credentials.')
+
+  credentials = google.oauth2.credentials.Credentials(
+    **flask.session['credentials'])
+
+  revoke = requests.post('https://accounts.google.com/o/oauth2/revoke',
+      params={'token': credentials.token},
+      headers = {'content-type': 'application/x-www-form-urlencoded'})
+
+  status_code = getattr(revoke, 'status_code')
+  if status_code == 200:
+    return('Credentials successfully revoked.')
+  else:
+    return('An error occurred.')
+
+
+@app.route('/clear')
+@requires_user_auth
+def clear_credentials():
+  if 'credentials' in flask.session:
+    del flask.session['credentials']
+  return ('Credentials have been cleared.<br><br>')
+
+@app.route('/user', methods=['GET'])
+@requires_service_auth
+def get_user():
+    logging.debug(flask.session['user_data'])
+    return jsonify(flask.session['user_data'])
+
 @app.route('/schedule', methods=['GET'])
+@requires_service_auth
 def get_heater_schedule():
     schedules = schedule_table.all()
     schedules = list(map(add_doc_id_as_id_to_entry, schedules))
@@ -99,6 +243,7 @@ def get_heater_schedule():
     return jsonify(schedules)
 
 @app.route('/schedule', methods=['POST'])
+@requires_service_auth
 def add_heater_schedule():
     day_of_week = int(request.json[DAY_OF_WEEK_JSON_KEY])
     from_time = request.json[FROM_TIME_JSON_KEY]
@@ -118,11 +263,13 @@ def add_heater_schedule():
         return jsonify({'errors':['One of the values was None']})
 
 @app.route('/schedule/<id>', methods=['DELETE'])
+@requires_service_auth
 def delete_heater_schedule(id):
     schedule_table.remove(doc_ids=[int(id)])
     return ''
 
 @app.route('/heater/status', methods=['PUT'])
+@requires_service_auth
 def set_heater_status():
     #runtime_config[BOILER_STATUS_KEY][IS_BOILER_ON_KEY] = request.json[IS_BOILER_ON_JSON_KEY]
     global runtime_config
@@ -142,6 +289,7 @@ def set_heater_status():
     return ''
 
 @app.route('/heater/overridenDate', methods=['PUT'])
+@requires_service_auth
 def set_heater_overridenDate():
     global runtime_config
     runtime_config[BOILER_STATUS_KEY][SCHEDULE_OVERRIDEN_STARTED_KEY] = request.json[SCHEDULE_OVERRIDEN_STARTED_JSON_KEY]    
@@ -151,6 +299,7 @@ def set_heater_overridenDate():
     return ''
 
 @app.route('/heater/status', methods=['GET'])
+@requires_service_auth
 def get_heater_status():
     heater_controller_actioner()
 
@@ -166,12 +315,14 @@ def get_heater_status():
     return jsonify(boiler_status_response)
 
 @app.route('/system/status', methods=['GET'])
+@requires_service_auth
 def get_system_statys():
     isSystemOn = {}
     isSystemOn[IS_SYSTEM_ON_JSON_KEY] = runtime_config[IS_SYSTEM_ON_KEY]
     return jsonify(isSystemOn)
 
 @app.route('/system/status', methods=['POST'])
+@requires_service_auth
 def set_system_status():
     global runtime_config
     runtime_config[IS_SYSTEM_ON_KEY] = request.json[IS_SYSTEM_ON_JSON_KEY]
@@ -179,12 +330,14 @@ def set_system_status():
     return ''
 
 @app.route('/system/mode', methods=['GET'])
+@requires_service_auth
 def get_system_mode():
     mode = {}
     mode[MODE_JSON_KEY] = runtime_config[MODE_KEY]
     return jsonify(mode)
 
 @app.route('/system/mode', methods=['POST'])
+@requires_service_auth
 def set_system_mode():
     global runtime_config
     runtime_config[MODE_KEY] = request.json[MODE_JSON_KEY]
@@ -192,12 +345,14 @@ def set_system_mode():
     return ''
 
 @app.route('/places/<measurement_type>', methods=['GET'])
+@requires_service_auth
 def get_places_for_type(measurement_type):
     places = commonFunctions.get_places_for_type(measurement_type)
     #places = runtime_config['available_places']
     return jsonify(places)
 
 @app.route('/temperature/avg/<place>', methods=['GET'])
+@requires_service_auth
 def get_current_avg_temperature_for_as_json(place):
     max_age_in_mins = request.args.get(MAX_AGE_JSON_KEY)
     return jsonify(get_current_avg_temperature_for(place, max_age_in_mins))
@@ -210,6 +365,7 @@ def get_current_avg_temperature_for(place, time_period_in_mins):
     return result
 
 @app.route('/temperature/<place>', methods=['GET'])
+@requires_service_auth
 def get_current_temperature_for_as_json(place):
     max_age_in_mins = request.args.get(MAX_AGE_JSON_KEY)
     return jsonify(get_current_temperature_for(place, max_age_in_mins))
@@ -231,6 +387,7 @@ def get_boiler_text_value_for(value):
     return 'off'
 
 @app.route('/schedule/active', methods=['GET'])
+@requires_service_auth
 def get_active_schedule_configuration_as_json():
     return jsonify(get_active_schedule_configuration())
 
@@ -407,6 +564,14 @@ def calculate_new_boiler_state(is_boiler_on):
     logging.debug('New state should be %s' % (schedule_state and temperature_state))
     return schedule_state and temperature_state, '%s%s' % (schedule_reason, temperature_reason), '%s - %s' % (schedule_reason_explanation, temperature_reason_explanation)
 
+def credentials_to_dict(credentials):
+  return {'token': credentials.token,
+          'refresh_token': credentials.refresh_token,
+          'token_uri': credentials.token_uri,
+          'client_id': credentials.client_id,
+          'client_secret': credentials.client_secret,
+          'scopes': credentials.scopes}
+
 def setup_relay_port():
     GPIO.setup(config.boiler['gpio_port'], GPIO.OUT)   
     GPIO.output(config.boiler['gpio_port'], GPIO.LOW)  
@@ -444,12 +609,14 @@ def web_app_main():
     if not debug:
         log_flask = logging.getLogger('werkzeug')
         log_flask.setLevel(logging.ERROR)
-    app.run(debug=debug, use_reloader=False, host=config.webapp['listening_ip'])
+
+    app.run(debug=debug, use_reloader=False, host=config.webapp['listening_ip'],ssl_context=config.webapp['sslConfig'])
 
 def main():
     try:
         logging.info("Saving to file: %s" % (config.file['save_to_file']))
         logging.info("Saving to DB: %s" % (config.mysql['save_to_DB']))
+        os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '0'
         t = threading.Thread(name='web_app_main',target=web_app_main)
         t.setDaemon(True)
         t.start()
