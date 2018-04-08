@@ -6,6 +6,7 @@ app/config/schedulesDB.json
 app/config/schedulesDB_*.json
 **/*.pem
 **/*.pyc
+extras
 **/measurements/*
 doc/*
 db/*BKP*
