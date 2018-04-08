@@ -91,6 +91,8 @@ MODE_JSON_KEY = 'mode'
 
 MAX_AGE_JSON_KEY = 'maxAge'
 
+SESSION_CREDENTIALS_KEY = 'credentials'
+SESSION_USER_DATA_KEY = 'user_data'
 #list(calendar.day_name)
 #['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 #list(calendar.day_abbr)
@@ -104,20 +106,21 @@ runtime_config = configFunctions.get_runtime_config()
 def requires_user_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if 'credentials' not in flask.session:
+        if SESSION_CREDENTIALS_KEY not in flask.session:
             logging.debug("User session not initiated")
             return authorize()
-        if flask.session['user_data']['email'] not in runtime_config[ALLOWED_LOGINS_KEY]:
-            logging.debug("User %s not allowed" % flask.session['user_data']['email'])
+        if flask.session[SESSION_USER_DATA_KEY]['email'] not in runtime_config[ALLOWED_LOGINS_KEY]:
+            logging.debug("User %s not allowed" % flask.session[SESSION_USER_DATA_KEY]['email'])
             return user_unathorized()
-        logging.debug("User %s is allowed" % flask.session['user_data']['email'])
+        logging.debug("User %s is allowed" % flask.session[SESSION_USER_DATA_KEY]['email'])
         return f(*args, **kwargs)
     return decorated
 
 def user_unathorized():
     return Response(
-    'Your google email is not authorized.\n'
-    'You have to login with proper credentials', 401)
+    'Your google email is not authorized.</br>\n'
+    'You have to login with proper credentials</br>\n'
+    '<a href="/logout">Click here</a> to close your session ', 401)
 
 def unathorized():
     return Response(
@@ -127,13 +130,13 @@ def unathorized():
 def requires_service_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if 'credentials' not in flask.session:
+        if SESSION_CREDENTIALS_KEY not in flask.session:
             logging.debug("User session not initiated")
             return unathorized()
-        if flask.session['user_data']['email'] not in runtime_config[ALLOWED_LOGINS_KEY]:
-            logging.debug("User %s not allowed" % flask.session['user_data']['email'])
+        if flask.session[SESSION_USER_DATA_KEY]['email'] not in runtime_config[ALLOWED_LOGINS_KEY]:
+            logging.debug("User %s not allowed" % flask.session[SESSION_USER_DATA_KEY]['email'])
             return unathorized()
-        logging.debug("User %s is allowed" % flask.session['user_data']['email'])
+        logging.debug("User %s is allowed" % flask.session[SESSION_USER_DATA_KEY]['email'])
         return f(*args, **kwargs)
     return decorated
 
@@ -180,13 +183,13 @@ def oauth2callback():
   
   google_session = flow.authorized_session()
   #print google_session.get('https://www.googleapis.com/userinfo/v2/me').json()
-  flask.session['user_data'] = google_session.get('https://www.googleapis.com/userinfo/v2/me').json()
+  flask.session[SESSION_USER_DATA_KEY] = google_session.get('https://www.googleapis.com/userinfo/v2/me').json()
 
   # Store credentials in the session.
   # ACTION ITEM: In a production app, you likely want to save these
   #              credentials in a persistent database instead.
   credentials = flow.credentials
-  flask.session['credentials'] = credentials_to_dict(credentials)
+  flask.session[SESSION_CREDENTIALS_KEY] = credentials_to_dict(credentials)
 
   return flask.redirect(flask.url_for('index'))
 
@@ -198,16 +201,16 @@ def logout():
 
 @app.route('/logoutSuccess')
 def logout_success():
-    return "Logout Success"
+    return 'Logout Success</br><a href="/">Click here</a> to login again'
 
 @app.route('/revoke')
 def revoke():
-  if 'credentials' not in flask.session:
+  if SESSION_CREDENTIALS_KEY not in flask.session:
     return ('You need to <a href="/authorize">authorize</a> before ' +
             'testing the code to revoke credentials.')
 
   credentials = google.oauth2.credentials.Credentials(
-    **flask.session['credentials'])
+    **flask.session[SESSION_CREDENTIALS_KEY])
 
   revoke = requests.post('https://accounts.google.com/o/oauth2/revoke',
       params={'token': credentials.token},
@@ -223,15 +226,17 @@ def revoke():
 @app.route('/clear')
 @requires_user_auth
 def clear_credentials():
-  if 'credentials' in flask.session:
-    del flask.session['credentials']
-  return ('Credentials have been cleared.<br><br>')
+    if SESSION_CREDENTIALS_KEY in flask.session:
+        del flask.session[SESSION_CREDENTIALS_KEY]
+    if SESSION_USER_DATA_KEY in flask.session:
+        del flask.session[SESSION_USER_DATA_KEY]
+    return ('Credentials have been cleared.<br><br>')
 
 @app.route('/user', methods=['GET'])
 @requires_service_auth
 def get_user():
-    logging.debug(flask.session['user_data'])
-    return jsonify(flask.session['user_data'])
+    logging.debug(flask.session[SESSION_USER_DATA_KEY])
+    return jsonify(flask.session[SESSION_USER_DATA_KEY])
 
 @app.route('/schedule', methods=['GET'])
 @requires_service_auth
