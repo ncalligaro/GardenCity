@@ -10,6 +10,9 @@ pip install mysql-connector-python
 sudo apt-get -y install python-mysql.connector
 #pip install mysql-connector-python
 
+pip install --user --upgrade google-api-python-client
+pip install --user --upgrade google-auth google-auth-oauthlib google-auth-httplib2
+
 git clone https://github.com/adafruit/Adafruit_Python_DHT.git
 cd Adafruit_Python_DHT
 sudo python setup.py install
