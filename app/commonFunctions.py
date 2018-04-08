@@ -276,9 +276,7 @@ def get_places_for_type(measurement_type):
     try:
         db_connection = connect_to_db()
         cursor = db_connection.cursor()
-        
-        #Only get values from last X minutes
-        query_sentence = ("SELECT distinct(place) FROM measurement WHERE type = '%s'" % (measurement_type))
+        query_sentence = ("SELECT distinct(place) FROM measurement WHERE measurement_date > (now() - INTERVAL 45 MINUTE) AND type = '%s'" % (measurement_type))
         
         cursor.execute(query_sentence)
         records = cursor.fetchall()

@@ -9,7 +9,7 @@
       $scope.isSystemOn = false;
       $scope.isBoilerOn = false;
       $scope.systemMode = null;
-      $scope.user = {};
+      $scope.user = {'picture':'static/images/refresh.png'};
       $scope.manualTemperature = 20.7;
       $scope.manualLocation = 'Dining';
       $scope.maintainTemperature = false;
@@ -302,23 +302,22 @@
       $scope.fetchUsername = function() {
         $http.get('/user')
           .success(function(response){
-            console.log(response)
             $scope.user = response;
           })
       };
 
       //Executing functions at startup
-       $scope.$evalAsync(
-          function( $scope ) {
+       //$scope.$evalAsync(
+       //   function( $scope ) {
               $scope.fetchUsername();
               $scope.getSystemStatus();
               $scope.getSchedules();
               $scope.getBoilerStatus();
               $scope.fetchCurrentTemperatures();
-              $scope.fetchPlaces();
               $scope.newSchedule.dayOfWeek = $scope.currentDayOfWeekInPython();
-          }
-      );
+              $scope.fetchPlaces();
+        //  }
+      //);
       setInterval(function(){
         $scope.getBoilerStatus();
         $scope.fetchCurrentTemperatures();
