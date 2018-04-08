@@ -553,10 +553,12 @@ def calculate_new_boiler_state_on_temperature(is_boiler_on):
         logging.debug('There is no schedule active at this moment. Temperature is irrelevant.')
         return False, '.8', 'Schedule mode but no active schedule. Boiler needs to be off'
 
+    if is_system_in_schedule_mode() and current_schedule:
+        if is_temperature_within_margin(current_schedule[TARGET_TEMPERATURE_JSON_KEY], runtime_config[TEMPERATURE_MARGIN_KEY], temperature, is_boiler_on):
+            return True, '.2', 'Temperature within margin. Boiler needs to be on'
+        return False, '.3', 'Temperature is too high. Boiler needs to be off'
+
     return False, '.9', 'How did we get to this. Boiler needs to be off'
-    #if is_temperature_within_margin(current_schedule[TARGET_TEMPERATURE_JSON_KEY], runtime_config[TEMPERATURE_MARGIN_KEY], temperature, is_boiler_on):
-    #    return True, '.2', 'Temperature within margin. Boiler needs to be on'
-    #return False, '.3', 'Temperature is too high. Boiler needs to be off'
 
 def is_temperature_within_margin(target_temperature, margin, current_temperature, is_boiler_on):
     difference = target_temperature - current_temperature
