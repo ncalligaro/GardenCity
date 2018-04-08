@@ -44,5 +44,7 @@ Y codes:
 .5 Using default temperature %s. Temperature within margin. Boiler needs to be on
 .6 Unable to read %s temperature
 .7 Unable to read avg %s temperature
+.8 Schedule mode but no active schedule. Boiler needs to be off
+.9 How did we get to this. Boiler needs to be off -- Error mode
 
 Make sure I2C and SPI are disabled in raspi-config or depending of the outputs used it may cause issues

@@ -508,42 +508,55 @@ def calculate_new_boiler_state_on_selected_mode():
         return state, reason, reason_explanation
 
 def calculate_new_boiler_state_on_temperature(is_boiler_on):
-    #runtime_config[BOILER_STATUS_KEY][MAINTAIN_TEMPERATURE_KEY]
-    #runtime_config[BOILER_STATUS_KEY][MANUAL_TEMPERATURE_KEY]
-    #runtime_config[BOILER_STATUS_KEY][MANUAL_LOCATION_KEY]
-    avg_time_period_mins = 10
+    avg_time_period_mins = 5
     #Set default location
-    location = runtime_config[BOILER_STATUS_KEY][MANUAL_LOCATION_KEY]
+    location = None
     current_schedule = get_active_schedule_configuration()
     if current_schedule:
-        location = current_schedule[TARGET_PLACE_JSON_KEY]
-    current_avg_temperature_on_manual_location = get_current_avg_temperature_for(location, avg_time_period_mins)
-    logging.debug('average temperature past %s minutes in %s is %s' % (avg_time_period_mins, location, current_avg_temperature_on_manual_location))
+        if is_schedule_overriden_temporarily():
+            logging.debug("Location temporarily overriden")
+            location = runtime_config[BOILER_STATUS_KEY][MANUAL_LOCATION_KEY]
+        else:
+            logging.debug("Using schedule location")
+            location = current_schedule[TARGET_PLACE_JSON_KEY]
+
+    current_avg_temperature_on_selected_location = get_current_avg_temperature_for(location, avg_time_period_mins)
+    logging.debug('average temperature past %s minutes in %s is %s' % (avg_time_period_mins, location, current_avg_temperature_on_selected_location))
     
-    if current_avg_temperature_on_manual_location is None:
+    if current_avg_temperature_on_selected_location is None:
         location = runtime_config[MANUAL_LOCATION_KEY]
-        current_avg_temperature_on_manual_location = get_current_avg_temperature_for(location, avg_time_period_mins)
-        logging.debug('average temperature past %s minutes in %s is %s' % (avg_time_period_mins, location, current_avg_temperature_on_manual_location))
+        current_avg_temperature_on_selected_location = get_current_avg_temperature_for(location, avg_time_period_mins)
+        logging.debug("Unable to use schedule for selected location. Falling back to default %s" % location)
+        logging.debug('average temperature past %s minutes in %s is %s' % (avg_time_period_mins, location, current_avg_temperature_on_selected_location))
     
     #Temp is still none, what the hell?
-    if current_avg_temperature_on_manual_location is None:
+    if current_avg_temperature_on_selected_location is None:
         logging.error('Unable to read avg %s temperature' % location)
         return False, '.7', ('Unable to read avg %s temperature' % location)
     
-    temperature = current_avg_temperature_on_manual_location['temperature']
+    temperature = current_avg_temperature_on_selected_location['temperature']
     if temperature is None:
         logging.error('Unable to read %s temperature' % location)
         return False, '.6', ('Unable to read %s temperature' % location)
         
-    if not current_schedule or is_system_in_manual_mode():
-        logging.debug('There is no schedule active at this moment. Using default temperature %s' % (runtime_config[BOILER_STATUS_KEY][MANUAL_TEMPERATURE_KEY]))
+    if is_system_in_manual_mode() or (is_system_in_schedule_mode() and is_schedule_overriden_temporarily()):
+        if is_system_in_manual_mode():
+            logging.debug('System in manual mode at this moment. Using manual temperature %s' % (runtime_config[BOILER_STATUS_KEY][MANUAL_TEMPERATURE_KEY]))
+        else:
+            logging.debug('System in schedule mode but temporarily overriden. Using manual temperature %s' % (runtime_config[BOILER_STATUS_KEY][MANUAL_TEMPERATURE_KEY]))
+
         if is_temperature_within_margin(runtime_config[BOILER_STATUS_KEY][MANUAL_TEMPERATURE_KEY], runtime_config[TEMPERATURE_MARGIN_KEY], temperature, is_boiler_on):
             return True, '.5', ('Using default temperature %s. Temperature within margin. Boiler needs to be on' % (runtime_config[BOILER_STATUS_KEY][MANUAL_TEMPERATURE_KEY]))
         return False, '.4', ('Using default temperature %s. Temperature is too high. Boiler needs to be off' % (runtime_config[BOILER_STATUS_KEY][MANUAL_TEMPERATURE_KEY]))
+    
+    if is_system_in_schedule_mode() and not current_schedule:
+        logging.debug('There is no schedule active at this moment. Temperature is irrelevant.')
+        return False, '.8', 'Schedule mode but no active schedule. Boiler needs to be off'
 
-    if is_temperature_within_margin(current_schedule[TARGET_TEMPERATURE_JSON_KEY], runtime_config[TEMPERATURE_MARGIN_KEY], temperature, is_boiler_on):
-        return True, '.2', 'Temperature within margin. Boiler needs to be on'
-    return False, '.3', 'Temperature is too high. Boiler needs to be off'
+    return False, '.9', 'How did we get to this. Boiler needs to be off'
+    #if is_temperature_within_margin(current_schedule[TARGET_TEMPERATURE_JSON_KEY], runtime_config[TEMPERATURE_MARGIN_KEY], temperature, is_boiler_on):
+    #    return True, '.2', 'Temperature within margin. Boiler needs to be on'
+    #return False, '.3', 'Temperature is too high. Boiler needs to be off'
 
 def is_temperature_within_margin(target_temperature, margin, current_temperature, is_boiler_on):
     difference = target_temperature - current_temperature

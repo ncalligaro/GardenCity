@@ -4,25 +4,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!--link rel="icon" href="https://templates.pingendo.com/assets/Pingendo_favicon.ico"-->
   <title>Heat Control</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" type="text/css">
-  <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular.min.js"></script>
-  <script src="https://code.jquery.com/jquery-3.2.1.js" integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE=" crossorigin="anonymous"></script>
-  <!--script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script-->
-  <!--link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.css') }}" type="text/css"-->
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/font-awesome.min.css') }}" type="text/css">
+  <script src="{{ url_for('static', filename='js/angular.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/jquery-3.2.1.min.js') }}"></script>
+  <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/bootstrap-theme.min.css') }}" rel="stylesheet">
+  <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/github.min.css') }}" type="text/css">
   <link href="{{ url_for('static', filename='css/angular-bootstrap-toggle.min.css') }}" rel="stylesheet">
   <script src="{{ url_for('static', filename='js/angular-bootstrap-toggle.min.js') }}"></script>
-  <!--link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}" type="text/css"-->
-  <!--link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-theme.css') }}" type="text/css"-->
-  <!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/angular-clockpicker.css') }}" type="text/css"> -->
-  <!-- <script src="{{ url_for('static', filename='js/angular-clockpicker.min.js') }}"></script> -->
-  <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment-with-locales.js"></script>
+  <script src="{{ url_for('static', filename='js/moment-with-locales.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/angular-moment-picker.js') }}"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/angular-moment-picker.css') }}" type="text/css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+  <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
   <script src="{{ url_for('static', filename='main.js') }}"></script>
   <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.png') }}">
   <style>
@@ -155,7 +149,7 @@
           <h4>Snooze for</h4><small class="form-text text-muted">(hours)</small>
         </div>
         <div class="col-md-3">
-          <input class="form-control" type="number" ng-model="scheduleOverridenTime" ng-change="updateSystemValues()" min="0" max="24" step="0.5"/>
+          <input class="form-control" type="number" ng-model="scheduleOverridenTime" ng-change="updateSystemValues()" ng-model-options="{ debounce: 1000 }" min="0" max="48" step="0.5"/>
         </div>
       </div>
       <div class="row" ng-show="isSystemOn && (isManualModeEnabled() || isScheduleModeEnabled() && isCurrentScheduleOverriden)">
@@ -163,7 +157,7 @@
           <h4>Maintain temperature?</h4>
         </div>
         <div class="col-md-3">
-          <toggle ng-disabled="!(isManualModeEnabled() || isScheduleModeEnabled() && isCurrentScheduleOverriden)" id="maintainTemperature" ng-model="maintainTemperature" ng-change="toggleMantainTemperature()" on="Yes" off="No" onstyle="btn-success" offstyle="btn-danger"></toggle>
+          <toggle ng-disabled="!(isManualModeEnabled() || isScheduleModeEnabled() && isCurrentScheduleOverriden)" id="maintainTemperature" ng-model="maintainTemperature" ng-change="toggleMantainTemperature()" ng-model-options="{ debounce: 500 }" on="Yes" off="No" onstyle="btn-success" offstyle="btn-danger"></toggle>
         </div>
       </div>
       <div class="row" ng-show="isSystemOn && (isManualModeEnabled() || isScheduleModeEnabled() && isCurrentScheduleOverriden)">
@@ -171,7 +165,7 @@
           <h4>Target Temperature</h4>
         </div>
         <div class="col-md-3">
-          <input class="form-control" type="number" ng-model="manualTemperature" ng-change="updateSystemValues()" min="13" max="30" step="0.1"/>
+          <input class="form-control" type="number" ng-model="manualTemperature" ng-change="updateSystemValues()" ng-model-options="{ debounce: 1000 }" min="13" max="30" step="0.1"/>
         </div>
       </div>
       <div class="row" ng-show="isSystemOn && (isManualModeEnabled() || isScheduleModeEnabled() && isCurrentScheduleOverriden)">
