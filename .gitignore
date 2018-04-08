@@ -4,6 +4,7 @@ app/config/config.py
 app/config/runtimeSettings.json
 app/config/schedulesDB.json
 app/config/schedulesDB_*.json
+**/*.pem
 **/*.pyc
 **/measurements/*
 doc/*
