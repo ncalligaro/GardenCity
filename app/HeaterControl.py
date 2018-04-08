@@ -510,7 +510,7 @@ def calculate_new_boiler_state_on_selected_mode():
 def calculate_new_boiler_state_on_temperature(is_boiler_on):
     avg_time_period_mins = 5
     #Set default location
-    location = None
+    location = runtime_config[BOILER_STATUS_KEY][MANUAL_LOCATION_KEY]
     current_schedule = get_active_schedule_configuration()
     if current_schedule:
         if is_schedule_overriden_temporarily():
