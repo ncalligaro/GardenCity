@@ -39,7 +39,7 @@ remote_arduino_sensors = [{ 'gpio_port': 17,
                            }]
 
 runtime_variables = { 'debug' : True,
-                      'log_format' : '%(asctime)s [%(levelname)s] (%(threadName)-10s) %(message)s',
+                      'log_format' : '%(asctime)s [%(levelname)s] (%(threadName)-10s) %(filename)s:%(lineno)d %(message)s',
                       'log_date_format' : '%H:%M:%S',
                        }      
 
@@ -48,6 +48,7 @@ boiler = { 'temperature_margin' : 0.5,
            }
 
 webapp = { 'listening_ip': '0.0.0.0',
+           'sslConfig': ('config/fullchain.pem', 'config/privkey.pem'),
             }
 
 def get_logging_level():
