@@ -90,6 +90,7 @@ def save_two_value_record(place, value, second_value, value_type, unit, measurem
 
     if (config.mysql['save_to_DB']):
         db_connection = None
+        query_sentence = None
         try:
 
             db_connection = connect_to_db()
@@ -117,6 +118,8 @@ def save_two_value_record(place, value, second_value, value_type, unit, measurem
                 #logging.debug("Values already exist in DB: %s" % sql_sentence)
         except mariadb.Error as error:
             logging.debug("Error saving to DB: {}".format(error))
+            logging.error("Update is %s", sql_sentence)
+            logging.error("Query is %s", query_sentence)
         finally:
             if db_connection is not None:
                 db_connection.close()

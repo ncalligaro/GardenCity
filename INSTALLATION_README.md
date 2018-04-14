@@ -10,6 +10,14 @@ pip install mysql-connector-python
 sudo apt-get -y install python-mysql.connector
 #pip install mysql-connector-python
 
+If you want to use sensor type DS18B20
+   sudo pip install w1thermsensor
+   OR:
+      sudo apt-get install python3-w1thermsensor
+      sudo apt-get install python-w1thermsensor
+
+   Edit /boot/config.txt and add "dtoverlay=w1-gpio" at the end
+
 pip install --user --upgrade google-api-python-client
 pip install --user --upgrade google-auth google-auth-oauthlib google-auth-httplib2
 
