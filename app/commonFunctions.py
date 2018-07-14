@@ -2,24 +2,10 @@
 from __future__ import print_function
 from config import config
 
-import sys
-#import serial
 import datetime
-import time
-import re
 import traceback
-#import httplib
-#import urllib
-#import json
 
 import mysql.connector as mariadb
-
-import sys
-#import RPi.GPIO as GPIO
-#from lib_nrf24 import NRF24
-#import spidev
-
-#import Adafruit_DHT
 
 import logging
 

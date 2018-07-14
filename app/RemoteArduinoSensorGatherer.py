@@ -3,16 +3,10 @@ from config import config
 
 import commonFunctions
 
-#from __future__ import print_function
-import sys
-import serial
 import datetime
 import time
 import re
 import traceback
-import httplib
-import urllib
-import json
 import logging
 from time import sleep
 

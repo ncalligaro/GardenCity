@@ -3,20 +3,13 @@ from config import config
 
 import commonFunctions
 
-#from __future__ import print_function
-import sys
-import serial
 import datetime
-import time
 from time import sleep
-import re
 import traceback
-import json
 import logging
 
 import sys
 import RPi.GPIO as GPIO
-#import spidev
 
 #Import sensors conditionally depending on selected modules
 for sensor in config.local_sensors['sensors']:

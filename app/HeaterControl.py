@@ -16,13 +16,9 @@ from datetime import datetime
 from datetime import timedelta 
 import pytz
 
-import time
-
 import traceback
 
-import json
 import calendar
-from decimal import Decimal
 
 import threading
 from time import sleep
@@ -34,12 +30,6 @@ import RPi.GPIO as GPIO
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
 
-# from lib_nrf24 import NRF24
-# import spidev
-# import serial
-# import re
-# import httplib
-# import urllib
 
 logging.basicConfig(level=config.get_logging_level(),
                     format=config.runtime_variables['log_format'],
