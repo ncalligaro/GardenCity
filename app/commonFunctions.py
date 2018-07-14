@@ -40,10 +40,10 @@ def get_from_dic(dictionary, field1, field2 = None):
         return None
     return dictionary.get(field1).get(field2)
 
-def connect_to_db():
+def connect_to_db(db_config):
     try:
         #Need to remove this key because it's a custom one and mysql connector complains otherwise
-        mysql_config = config.mysql.copy()
+        mysql_config = db_config.copy()
         del mysql_config['save_to_DB']
         return mariadb.connect(**mysql_config)
     except mariadb.Error as error:
@@ -61,10 +61,12 @@ def save_two_value_record(place, value, second_value, value_type, unit, measurem
         value = 'null'
     if second_value is None:
         second_value = 'null'
+    else:
+        second_value = "'%s'" % second_value
 
     measurement_date = fix_measurement_date(measurement_date)
 
-    sql_sentence = ("INSERT INTO measurement (place,type,value,value2,unit,measurement_date,created_at) VALUES ('%s','%s',%s,'%s','%s',%s,'%s');\n" % (place, value_type, value, second_value, unit, measurement_date, creation_time))
+    sql_sentence = ("INSERT INTO measurement (place,type,value,value2,unit,measurement_date,created_at) VALUES ('%s','%s',%s,%s,'%s',%s,'%s');\n" % (place, value_type, value, second_value, unit, measurement_date, creation_time))
 
     if (config.file['save_to_file']):
         try:
@@ -79,7 +81,7 @@ def save_two_value_record(place, value, second_value, value_type, unit, measurem
         query_sentence = None
         try:
 
-            db_connection = connect_to_db()
+            db_connection = connect_to_db(config.mysql)
             cursor = db_connection.cursor()
             #First check if record already exists
 
@@ -126,7 +128,7 @@ def save_heater_record(state, reason, reason_explanation, measurement_date, crea
     if (config.mysql['save_to_DB']):
         db_connection = None
         try:
-            db_connection = connect_to_db()
+            db_connection = connect_to_db(config.mysql)
             cursor = db_connection.cursor()
 
             # query_sentence = ("SELECT * FROM heater where place = '%s' AND person = '%s' AND measurement_date = %s" % (place, person, measurement_date))
@@ -160,7 +162,7 @@ def save_presence_record(place, person, presence, measurement_date, creation_tim
         db_connection = None
         try:
 
-            db_connection = connect_to_db()
+            db_connection = connect_to_db(config.mysql)
             cursor = db_connection.cursor()
 
             query_sentence = ("SELECT * FROM presence where place = '%s' AND person = '%s' AND measurement_date = %s" % (place, person, measurement_date))
@@ -179,16 +181,16 @@ def save_presence_record(place, person, presence, measurement_date, creation_tim
 
 def fetch_one_record_as_dictionary(cursor):
     data = cursor.fetchone()
-    if data == None:
+    if data is None:
         return None
     desc = cursor.description
 
-    dict = {}
+    newDict = {}
 
     for (name, value) in zip(desc, data):
-        dict[name[0]] = value
+        newDict[name[0]] = value
 
-    return dict
+    return newDict
 
 def get_last_avg_measurement_for_place(value_type, place, time_period_in_mins):
     if place is None or value_type is None:
@@ -199,7 +201,7 @@ def get_last_avg_measurement_for_place(value_type, place, time_period_in_mins):
     db_connection = None
     cursor = None
     try:
-        db_connection = connect_to_db()
+        db_connection = connect_to_db(config.mysql)
         cursor = db_connection.cursor()
         
         #Only get values from last X minutes
@@ -232,7 +234,7 @@ def get_last_measurement_for_place(value_type, place, max_age_in_mins):
     db_connection = None
     cursor = None
     try:
-        db_connection = connect_to_db()
+        db_connection = connect_to_db(config.mysql)
         cursor = db_connection.cursor()
         
         #Only get values from last X minutes
@@ -263,7 +265,7 @@ def get_places_for_type(measurement_type):
     db_connection = None
     cursor = None
     try:
-        db_connection = connect_to_db()
+        db_connection = connect_to_db(config.mysql)
         cursor = db_connection.cursor()
         query_sentence = ("SELECT distinct(place) FROM measurement WHERE measurement_date > (now() - INTERVAL 45 MINUTE) AND type = '%s'" % (measurement_type))
         
