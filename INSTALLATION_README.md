@@ -65,9 +65,16 @@ sudo systemctl enable gardenCity_HeaterControl
 sudo systemctl start gardenCity_HeaterControl
 sudo systemctl status gardenCity_HeaterControl.service
 
+crontab -e
+and then add:
+5 19 * * * /home/pi/GardenCity/dbReplicator.py
+
 echo 'Install NR24 bla'
 
 
 #Other tools for dev:
 pip install autopep8
 #autopep8 -i LocalSensorGatherer.py  (makes modifications to the file in site to make it pep8 compliant)
+#First one restarts disks on syno, the second one actually works
+5 19 * * * /home/pi/GardenCity/dbReplicator.py > /tmp/dbReplicator.log 2>/tmp/dbReplicator.log
+9 19 * * * /home/pi/GardenCity/dbReplicator.py > /tmp/dbReplicator.log 2>/tmp/dbReplicator.log
