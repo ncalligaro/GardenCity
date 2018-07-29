@@ -342,3 +342,8 @@ def save_heater_data(state, reason, reason_explanation, measurement_date, creati
     if state is not None and reason is not None and measurement_date is not None:
         save_heater_record(state, reason, reason_explanation, measurement_date, creation_time)
 
+def flush_cursor(cursor):
+    while True:
+        data = cursor.fetchone()
+        if data is None:
+            break

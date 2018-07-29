@@ -11,7 +11,11 @@ import logging
 import sys
 
 
-logging.basicConfig(level=config.get_logging_level(),
+logging.basicConfig(level=config.get_logging_level(config.replicator),
+                    format=config.runtime_variables['log_format'],
+                    datefmt=config.runtime_variables['log_date_format'])
+
+commonFunctions.logging.basicConfig(level=config.get_logging_level(config.replicator),
                     format=config.runtime_variables['log_format'],
                     datefmt=config.runtime_variables['log_date_format'])
 
@@ -22,14 +26,15 @@ def replicate_table(table_name):
     src_db_connection = None
     replicated_db_connection = None
     src_cursor = None
+    query_sentence = "<Unknown>"
     try:
         src_db_connection = commonFunctions.connect_to_db(config.mysql)
         replicated_db_connection = commonFunctions.connect_to_db(config.replicator['db'])
 
         query_sentence = ("SELECT * FROM %s where %s = false or %s is null" % (table_name, config.replicator['replicated_attribute'], config.replicator['replicated_attribute']))
-        logging.debug("Fetching records from src table: %s", query_sentence)
+        logging.info("Fetching records from src table: %s", query_sentence)
 
-        logging.debug("Number of records to be replicated for table {}: {}".format(table_name,
+        logging.info("Number of records to be replicated for table {}: {}".format(table_name,
                                                                                    count_pending_replication_records_for_table(
                                                                                        config.mysql, table_name)))
         src_cursor = src_db_connection.cursor()
@@ -105,7 +110,7 @@ def insert_record_in_replicated_db(original_record, table_name, db_connection_co
     except mariadb.Error as error:
         logging.debug("Error saving to DB: {}".format(error))
         logging.error("Query is %s", insert_sentence)
-        return -1
+        raise error
     finally:
         if cursor is not None:
             cursor.close()
@@ -160,7 +165,61 @@ def update_record_as_replicated(record, table_name, db_connection_config):
             connection.close()
 
 def delete_replicated_up_to(table_name, max_age_in_source_in_hours):
-    return
+    if table_name is None:
+        raise Exception("table_name must have a value")
+    if max_age_in_source_in_hours is None:
+        raise Exception("max_age_in_source_in_hours must have a value")
+
+    connection = None
+    cursor = None
+    try:
+        connection = commonFunctions.connect_to_db(config.mysql)
+        delete_sentence = ("DELETE FROM %s WHERE %s = true AND DATE_ADD(NOW(), INTERVAL - %s HOUR) > measurement_date" % (table_name, config.replicator['replicated_attribute'], max_age_in_source_in_hours))
+        #delete_sentence = ("SELECT Count(*) FROM %s WHERE %s = true AND DATE_ADD(NOW(), INTERVAL - %s HOUR) > measurement_date" % (table_name, config.replicator['replicated_attribute'], max_age_in_source_in_hours))
+        logging.info("Deleting replicated records older than %s hours with sentence %s" % (max_age_in_source_in_hours, delete_sentence))
+        cursor = connection.cursor()
+        cursor.execute(delete_sentence)
+        connection.commit()
+        logging.info("Delete successful")
+    except mariadb.Error as error:
+        logging.debug("Error saving to DB: {}".format(error))
+        logging.error("Query is %s", delete_sentence)
+        logging.error(error)
+        logging.error(traceback.format_exc())
+        raise error
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if connection is not None:
+            connection.close()
+
+def optimize_table(table_name):
+    if table_name is None:
+        raise Exception("table_name must have a value")
+
+    connection = None
+    cursor = None
+    try:
+        connection = commonFunctions.connect_to_db(config.mysql)
+        optimize_sentence = ("OPTIMIZE TABLE %s" % (table_name))
+        #delete_sentence = ("SELECT Count(*) FROM %s WHERE %s = true AND DATE_ADD(NOW(), INTERVAL - %s HOUR) > measurement_date" % (table_name, config.replicator['replicated_attribute'], max_age_in_source_in_hours))
+        logging.info("Optimizing table %s with sentence %s" % (table_name, optimize_sentence))
+        cursor = connection.cursor()
+        cursor.execute(optimize_sentence)
+        commonFunctions.flush_cursor(cursor)
+        connection.commit()
+        logging.info("Optimize successful")
+    except mariadb.Error as error:
+        logging.debug("Error saving to DB: {}".format(error))
+        logging.error("Query is %s", optimize_sentence)
+        logging.error(error)
+        logging.error(traceback.format_exc())
+        raise error
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if connection is not None:
+            connection.close()
 
 def main():
     logging.info("Saving to file: %s" % (config.file['save_to_file']))
@@ -168,10 +227,11 @@ def main():
     logging.info("Starting loop")
     try:
         for table in config.replicator['tables_to_replicate']:
-            logging.debug("replicating table %s" % table)
+            logging.info("replicating table %s" % table)
             result = replicate_table(table)
             if result:
                 delete_replicated_up_to(table, config.replicator['max_age_in_source_in_hours'])
+                optimize_table(table)
 
     except KeyboardInterrupt:
         logging.error("\nbye!")
