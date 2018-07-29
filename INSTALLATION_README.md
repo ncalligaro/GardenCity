@@ -78,3 +78,7 @@ pip install autopep8
 #First one restarts disks on syno, the second one actually works
 5 19 * * * /home/pi/GardenCity/dbReplicator.py > /tmp/dbReplicator.log 2>/tmp/dbReplicator.log
 9 19 * * * /home/pi/GardenCity/dbReplicator.py > /tmp/dbReplicator.log 2>/tmp/dbReplicator.log
+
+If using mariadb, the replicator requires version 10.1 to work properly and if you do have 10.1 then add the following to my.cnf
+[mysqld]
+innodb-defragment=1
