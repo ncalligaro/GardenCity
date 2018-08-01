@@ -71,6 +71,10 @@ and then add:
 
 echo 'Install NR24 bla'
 
+raspi-config -> interfacing options
+Disable I2C
+Enable SPI
+
 
 #Other tools for dev:
 pip install autopep8
