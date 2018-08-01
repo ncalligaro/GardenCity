@@ -41,7 +41,7 @@ app = Flask(__name__)
 app.logger.setLevel(logging.ERROR)
 app.secret_key = configFunctions.get_client_secret()
 
-SCOPES = ['email', 'openid']
+SCOPES = ['https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/plus.me']
 
 #Keys
 IS_SYSTEM_ON_KEY = 'is_system_on'
