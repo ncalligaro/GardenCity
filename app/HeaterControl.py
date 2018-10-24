@@ -30,7 +30,7 @@ import RPi.GPIO as GPIO
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
 
-
+import logging
 logging.basicConfig(level=config.get_logging_level(),
                     format=config.runtime_variables['log_format'],
                     datefmt=config.runtime_variables['log_date_format'])
@@ -619,7 +619,15 @@ def web_app_main():
         log_flask = logging.getLogger('werkzeug')
         log_flask.setLevel(logging.ERROR)
 
-    app.run(debug=debug, use_reloader=False, host=config.webapp['listening_ip'],ssl_context=config.webapp['sslConfig'])
+    while True:
+        try:
+            logging.error("Initializing web app")
+            app.run(debug=debug, use_reloader=False, host=config.webapp['listening_ip'],
+                    ssl_context=config.webapp['sslConfig'])
+        except Exception as e:
+            logging.error("WebApp error occurred")
+            logging.error (e)
+            logging.error(traceback.format_exc())
 
 def main():
     try:
