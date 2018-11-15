@@ -27,10 +27,7 @@ logging.basicConfig(level=config.get_logging_level(),
 GPIO.setmode(GPIO.BCM)
 
 recent_values = {}
-recent_values['humidity'] = []
-recent_values['temperature'] = []
 number_of_values_to_average = 5
-#max_variation_in_units = 9
 
 def get_local_sensor_data(sensor_config):
     sensor_model = sensor_config['sensor_model']
@@ -56,28 +53,36 @@ def get_local_sensor_data(sensor_config):
 
 def is_within_range(type, value, sensor_config):
     global recent_values
-    if len(recent_values[type]) < number_of_values_to_average:
-        logging.info("There are less than %s values for %s. Adding %s to list" % (number_of_values_to_average, type, value))
+    type_and_name = get_type_and_name_key(type, sensor_config)
+    if not hasattr(recent_values, type_and_name):
+        recent_values[type_and_name] = []
+
+    if len(recent_values[type_and_name]) < number_of_values_to_average:
+        logging.info("There are less than %s values for %s. Adding %s to list" % (number_of_values_to_average, type_and_name, value))
         return True
 
-    logging.info("Average of array for type %s is %s" % (type, sum(recent_values[type])/len(recent_values[type])))
-    max_value = sum(recent_values[type])/len(recent_values[type]) + sensor_config['variation_margin_units']
-    min_value = sum(recent_values[type])/len(recent_values[type]) - sensor_config['variation_margin_units']
+    logging.info("Average of array for type %s is %s" % (type_and_name, sum(recent_values[type_and_name])/len(recent_values[type_and_name])))
+    max_value = sum(recent_values[type_and_name])/len(recent_values[type_and_name]) + sensor_config['variation_margin_units']
+    min_value = sum(recent_values[type_and_name])/len(recent_values[type_and_name]) - sensor_config['variation_margin_units']
     if min_value < value < max_value:
-        logging.debug("There are more than %s values for %s. Value %s was within range" % (number_of_values_to_average, type, value))
+        logging.debug("There are more than %s values for %s. Value %s was within range" % (number_of_values_to_average, type_and_name, value))
         return True
 
-    logging.info("Measure of %s %s was not within range. Ignoring value" % (type, value))
+    logging.info("Measure of %s %s was not within range. Ignoring value" % (type_and_name, value))
     return False
 
-def update_recent_list(type, value):
+def get_type_and_name_key(type, sensor_config):
+    return "%s%s" % (type, sensor_config['location_name'])
+
+def update_recent_list(type, value, sensor_config):
     global recent_values
-    if len(recent_values[type]) < number_of_values_to_average:
-        recent_values[type].append(value)
+    type_and_name = get_type_and_name_key(type, sensor_config)
+    if len(recent_values[type_and_name]) < number_of_values_to_average:
+        recent_values[type_and_name].append(value)
     else:
-        recent_values[type] = recent_values[type][1:]
-        recent_values[type].append(value)
-    logging.info("New len of array for type %s is %s" % (type, len(recent_values[type])))
+        recent_values[type_and_name] = recent_values[type_and_name][1:]
+        recent_values[type_and_name].append(value)
+    logging.info("New len of array for type %s is %s" % (type_and_name, len(recent_values[type_and_name])))
 
 def main():
     logging.info("Saving to file: %s" % (config.file['save_to_file']))
@@ -92,10 +97,10 @@ def main():
 
                 if LRH is not None and is_within_range('humidity', float(LRH), sensor):
                     commonFunctions.save_humidity_data(sensor['location_name'], LRH, now.isoformat(), now.isoformat())
-                    update_recent_list('humidity', float(LRH))
+                    update_recent_list('humidity', float(LRH), sensor)
                 if LT is not None and is_within_range('temperature', float(LT), sensor):
                     commonFunctions.save_temperature_data(sensor['location_name'], LT, now.isoformat(), now.isoformat())
-                    update_recent_list('temperature', float(LT))
+                    update_recent_list('temperature', float(LT), sensor)
 
             sleep(config.local_sensors['sleep_time_in_seconds_between_reads'])
     except KeyboardInterrupt:
