@@ -43,8 +43,8 @@
 
       $scope.fetchPlaces = function() {
         $http.get('/places/temperature')
-          .success(function(response){
-            $scope.availablePlaces = response.map(function(elem){
+          .then(function onSuccess(response){
+            $scope.availablePlaces = response.data.map(function(elem){
               return elem[0];
             });
             $scope.fetchCurrentTemperatures();
@@ -102,16 +102,16 @@
         $http({url:'/temperature/' + place,
                method: 'GET',
                params: {'maxAge': maxAge}})
-          .success(function(response){
-            $scope.currentTemperatures[place] = response;
-            $scope.currentTemperatures[place].roundedTemperature = Math.trunc(response.temperature*100)/100;
+          .then(function onSuccess(response){
+            $scope.currentTemperatures[place] = response.data;
+            $scope.currentTemperatures[place].roundedTemperature = Math.trunc(response.data.temperature*100)/100;
           })
       };
 
       $scope.getSchedules = function() {
         $http.get('/schedule')
-          .success(function(response){
-            $scope.schedules = response;
+          .then(function onSuccess(response){
+            $scope.schedules = response.data;
             $scope.getActiveSchedule();
           })
       };
@@ -119,14 +119,14 @@
       $scope.deleteSchedule = function(schedule){
         $scope.updateFormWithData(schedule);
         $http.delete('/schedule/' + schedule['object_id'])
-          .success(function(response){
+          .then(function onSuccess(response){
             $scope.getSchedules();
           })
       };
 
       $scope.addSchedule = function(){
         $http.post('/schedule', $scope.newSchedule)
-        .success(function(response){
+        .then(function onSuccess(response){
           $scope.getSchedules();
         })
       };
@@ -166,7 +166,7 @@
         overridenDate.scheduleOverridenStarted = ($scope.scheduleOverridenStarted==null?null:$scope.scheduleOverridenStarted.getTime());
 
         $http.put('/heater/overridenDate', overridenDate)
-        .success(function(response){
+        .then(function onSuccess(response){
           $scope.getBoilerStatus();
         })
       };
@@ -186,29 +186,29 @@
       $scope.getBoilerStatus = function() {
         $scope.getMode();
         $http.get('/heater/status')
-        .success(function(response){
-          $scope.isSystemOn = response.isSystemOn;
-          $scope.maintainTemperature = response.maintainTemperature;
-          $scope.manualLocation = response.manualLocation;
-          $scope.manualTemperature = response.manualTemperature;
-          $scope.scheduleOverridenStarted = (response.scheduleOverridenStarted==null?null:new Date(response.scheduleOverridenStarted));
-          $scope.scheduleOverridenTime = response.scheduleOverridenTime;
-          $scope.isBoilerOn = response.isBoilerOn;
-          $scope.isCurrentScheduleOverriden = response.isCurrentScheduleOverriden;
+        .then(function onSuccess(response){
+          $scope.isSystemOn = response.data.isSystemOn;
+          $scope.maintainTemperature = response.data.maintainTemperature;
+          $scope.manualLocation = response.data.manualLocation;
+          $scope.manualTemperature = response.data.manualTemperature;
+          $scope.scheduleOverridenStarted = (response.data.scheduleOverridenStarted==null?null:new Date(response.data.scheduleOverridenStarted));
+          $scope.scheduleOverridenTime = response.data.scheduleOverridenTime;
+          $scope.isBoilerOn = response.data.isBoilerOn;
+          $scope.isCurrentScheduleOverriden = response.data.isCurrentScheduleOverriden;
         })
       };
 
       $scope.setSystemStatus = function() {
         $http.post('/system/status', {'isSystemOn' : $scope.isSystemOn})
-        .success(function(response){
+        .then(function onSuccess(response){
           $scope.getBoilerStatus();
         })
       };
 
       $scope.getSystemStatus = function(){
         $http.get('/system/status')
-        .success(function(response){
-          $scope.isSystemOn = response.isSystemOn;
+        .then(function onSuccess(response){
+          $scope.isSystemOn = response.data.isSystemOn;
         })
       };
 
@@ -227,7 +227,7 @@
         boilerStatus.isCurrentScheduleOverriden = $scope.isCurrentScheduleOverriden;
 
         $http.put('/heater/status', boilerStatus)
-        .success(function(response){
+        .then(function onSuccess(response){
           $scope.getBoilerStatus();
         })
       };
@@ -278,7 +278,7 @@
           $scope.isCurrentScheduleOverriden = false;
         }
         $http.post('/system/mode', {'mode' : $scope.systemMode})
-        .success(function(response){
+        .then(function onSuccess(response){
           $scope.getMode();
           $scope.getBoilerStatus();
         })
@@ -286,23 +286,23 @@
 
       $scope.getMode = function(){
         $http.get('/system/mode')
-          .success(function(response){
-            $scope.systemMode = response['mode'];
+          .then(function onSuccess(response){
+            $scope.systemMode = response.data['mode'];
           })
       };
 
       $scope.getActiveSchedule = function() {
         $http.get('/schedule/active')
-          .success(function(response){
-            $scope.activeSchedule = response;
+          .then(function onSuccess(response){
+            $scope.activeSchedule = response.data;
             $scope.updatePercentageOfActiveSchedule();
           })
       };
 
       $scope.fetchUsername = function() {
         $http.get('/user')
-          .success(function(response){
-            $scope.user = response;
+          .then(function onSuccess(response){
+            $scope.user = response.data;
           })
       };
 
