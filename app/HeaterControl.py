@@ -388,6 +388,7 @@ def get_active_schedule_configuration_as_json():
 def get_active_schedule_configuration():
     now = datetime.now()
     today_day_of_week = now.weekday()
+    selected_index = 0
     current_integer_time = convert_time_to_integer("%s:%s" % (now.hour, now.minute))
     active_schedules = schedule_table.search((where(DAY_OF_WEEK_JSON_KEY) == today_day_of_week) & (where(FROM_TIME_DECIMAL_JSON_KEY) <= current_integer_time) & (where(TO_TIME_DECIMAL_JSON_KEY) > current_integer_time))
     if not active_schedules:
@@ -397,9 +398,21 @@ def get_active_schedule_configuration():
         logging.error('More than one active schedule found for %s. Active Schedules are:' % now.isoformat())
         for active_schedule in active_schedules:
             logging.error('dayOfWeek: %s | fromTime: %s | toTime: %s' % (active_schedule[DAY_OF_WEEK_JSON_KEY], active_schedule[FROM_TIME_JSON_KEY], active_schedule[TO_TIME_JSON_KEY]))
-        raise ValueError('More than one active schedule found for %s' % now.isoformat())
-    logging.debug('Found an active schedule: %s', active_schedules[0])
-    return active_schedules[0]
+        selected_index = get_index_of_higher_priority_of_multiple_schedules(active_schedules)
+        logging.error('Selected highest temperature one: dayOfWeek: %s | fromTime: %s | toTime: %s | temp: %s' % (active_schedules[selected_index][DAY_OF_WEEK_JSON_KEY], active_schedules[selected_index][FROM_TIME_JSON_KEY], active_schedules[selected_index][TO_TIME_JSON_KEY], active_schedule[TARGET_TEMPERATURE_JSON_KEY]))
+        #raise ValueError('More than one active schedule found for %s' % now.isoformat())
+    logging.debug('Found an active schedule: %s', active_schedules[selected_index])
+    return active_schedules[selected_index]
+
+def get_index_of_higher_priority_of_multiple_schedules(active_schedules):
+    active_index = 0
+    max_temp = -200
+    for index, active_schedule in enumerate(active_schedules):
+        if active_schedule[TARGET_TEMPERATURE_JSON_KEY] > max_temp:
+            logging.error('found new highest temperature: %s, before it was %s' % (active_schedule[TARGET_TEMPERATURE_JSON_KEY], max_temp))
+            max_temp = active_schedule[TARGET_TEMPERATURE_JSON_KEY]
+            active_index = index
+    return active_index
 
 def get_boiler_status_for_active_schedule():
     today_schedules = get_active_schedule_configuration()
