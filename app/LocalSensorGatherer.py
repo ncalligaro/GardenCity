@@ -54,7 +54,8 @@ def get_local_sensor_data(sensor_config):
 def is_within_range(type, value, sensor_config):
     global recent_values
     type_and_name = get_type_and_name_key(type, sensor_config)
-    if not hasattr(recent_values, type_and_name):
+    if type_and_name not in recent_values:
+        logging.debug("recent_values (%s) did not had key %s" % (recent_values, type_and_name))
         recent_values[type_and_name] = []
 
     if len(recent_values[type_and_name]) < number_of_values_to_average:
