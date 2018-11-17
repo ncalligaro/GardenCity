@@ -68,24 +68,27 @@
 
       $scope.getAlertTypeForTemperatureRange = function(temperature) {
         if (temperature < 10) {
-          return "alert-info";
+          return "alert-verycold";
         }
         if (temperature >= 10 && temperature < 18) {
-          return "alert-danger";
+          return "alert-cold";
         }
         if (temperature >= 18 && temperature < 19) {
-          return "alert-warning";
+          return "alert-mildcold";
         }
-        if (temperature >= 19 && temperature < 20) {
-          return "alert-success";
+        if (temperature >= 19 && temperature < 21) {
+          return "alert-mild";
         }
-        if (temperature >= 20 && temperature < 22) {
-          return "alert-warning";
+        if (temperature >= 21 && temperature < 23) {
+          return "alert-mildwarm";
         }
-        if (temperature >= 22) {
-          return "alert-danger";
+        if (temperature >= 23 && temperature < 26) {
+          return "alert-warm";
         }
-        return "alert-danger";
+        if (temperature >= 26) {
+          return "alert-verywarm";
+        }
+        return "alert-unknown";
       };
 
       $scope.fetchCurrentTemperatures = function() {

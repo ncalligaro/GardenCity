@@ -1,0 +1,55 @@
+.profile-picture {
+  max-height: 50px;
+}
+
+.profile-block {
+  padding: 8px 5px 8px 5px;
+}
+
+.alert-verycold {
+  color: #ffffff;
+  background-color: #136bc4;
+  border-color: #0115191;
+}
+
+.alert-cold {
+  color: #ffffff;
+  background-color: #619dd8;
+  border-color: #a2c5e8;
+}
+
+.alert-mildcold {
+  color: #ffffff;
+  background-color: #9bffe6;
+  border-color: #659b8d;
+}
+
+.alert-mild {
+  color: #ffffff;
+  background-color: #2aa830;
+  border-color: #5cd161;
+}
+
+.alert-mildwarm {
+  color: #ffffff;
+  background-color: #e5a819;
+  border-color: #b78819;
+}
+
+.alert-warm {
+  color: #ffffff;
+  background-color: #e05f14;
+  border-color: #e2671f;
+}
+
+.alert-verywarm {
+  color: #ffffff;
+  background-color: #e0440b;
+  border-color: #f46835;
+}
+
+.alert-unknown {
+  color: #ffffff;
+  background-color: #cccccc;
+  border-color: #bbbbbb;
+}

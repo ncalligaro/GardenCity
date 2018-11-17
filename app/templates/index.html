@@ -9,6 +9,7 @@
   <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
   <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='css/bootstrap-theme.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/theme-customisation.css') }}" rel="stylesheet">
   <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/github.min.css') }}" type="text/css">
   <link href="{{ url_for('static', filename='css/angular-bootstrap-toggle.min.css') }}" rel="stylesheet">
@@ -19,16 +20,6 @@
   <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
   <script src="{{ url_for('static', filename='main.js') }}"></script>
   <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.png') }}">
-  <style>
-  .profile-picture {
-    max-height: 50px;
-  }
-
-  .profile-block {
-    padding: 8px 5px 8px 5px;
-  }
-  </style>
-
 </head>
 {% raw %}
 <body ng-controller="HeaterController">
@@ -90,7 +81,7 @@
         </div>
       </div>
       <div class="row">
-        <div class="col-md-3 p-3" ng-repeat="place in availablePlaces">
+        <div class="col-md-3 p-3" ng-repeat="place in availablePlaces | orderBy">
           <div class="alert" ng-class="getAlertTypeForTemperatureRange(currentTemperatures[place].temperature)">
             {{place}}: {{currentTemperatures[place].roundedTemperature}} C <span ng-show="isPlaceDrivingTemperature(place)" class="badge">Driver</span>
           </div>
