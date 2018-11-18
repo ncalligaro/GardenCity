@@ -138,7 +138,7 @@
         $scope.newSchedule['fromTime'] = schedule['fromTime'];
         $scope.newSchedule['toTime'] = schedule['toTime'];
         $scope.newSchedule['dayOfWeek'] = String(schedule['dayOfWeek']);
-        $scope.newSchedule['targetTemperature'] = String(schedule['targetTemperature']);
+        $scope.newSchedule['targetTemperature'] = schedule['targetTemperature'];
         $scope.newSchedule['targetPlace'] = schedule['targetPlace'];
       };
 
