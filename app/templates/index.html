@@ -75,7 +75,7 @@
       <div class="row">
         <div class="col-12">
           {% endraw %}
-          <h3>Current Temperatures <button class="btn"><img class="img" width="20" ng-click="fetchCurrentTemperatures()" ng-src="{{ url_for('static', filename='images/refresh.png') }}"/></button><a href="https://services.nesty.stream:3500/" target="_blank"><img class="img" width="20" ng-click="fetchCurrentTemperatures()" ng-src="{{ url_for('static', filename='images/statistics.png') }}"/></a></h3>
+          <h3>Current Temperatures <i class="btn btn-lg glyphicon glyphicon-refresh" title="Refresh temperatures" ng-click="fetchCurrentTemperatures()"></i><a href="https://services.nesty.stream:3500/" class="black-hyperlink" title="Show stats" target="_blank"><i class="glyphicon glyphicon-stats" width="20" ng-click="fetchCurrentTemperatures()"></i></a></h3>
           {% raw %}
           <hr class="mb-4"> 
         </div>
@@ -96,7 +96,7 @@
       <div class="row">
         <div class="col-12">
           {% endraw %}
-          <h3>Status <button class="btn"><img class="img" width="20" ng-click="getBoilerStatus()" ng-src="{{ url_for('static', filename='images/refresh.png') }}"/></button></h3>
+          <h3>Status <i class="glyphicon glyphicon-refresh btn btn-lg" width="20" title="Refresh system status" ng-click="getBoilerStatus()"></i></h3>
           {% raw %}
           <hr class="mb-4"> 
         </div>
