@@ -11,7 +11,7 @@ Optional:
 - WebSensor: If you want to include city temperature statistics  
 - DBReplicator: if you have little storage on your device, but also have a big NAS somewhere running a MySQL db and wish to retain historic data  
   
-For installation the first step is to copy the whole repository to all devices where at least one component needs to be run.  
+For installation the first step is to copy the whole repository to all devices where at least one component needs to be run, except app/RPi, which is only used for development on non-raspberrypi machines.  
 Then we need to install the pre-requisites.  
 Remember to install Python libraries as the user configured to run the services.  
   
