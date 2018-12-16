@@ -1,4 +1,4 @@
-##Heatear Control  
+## Heater Control  
 This project allows you to take control of your boiler by stating which zone it should keep track of at diferent times in the day.  
 It's not fully multi-zone yet, as it needs electronic radiator valves and a little more development for that.  
 It is built using Python and AngularJS.  
