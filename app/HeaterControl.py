@@ -656,7 +656,7 @@ def main():
         sys.exit(1)
     except Exception as e:
         logging.error("Other error occurred")
-        logging.error (e)
+        logging.error(e)
         logging.error(traceback.format_exc())
         sys.exit(1)
     finally:
