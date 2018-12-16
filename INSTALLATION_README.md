@@ -5,10 +5,11 @@ Allows to manage
 #Setup:
 sudo apt-get install python{,3}-pip 
 #pip search mysql
-pip install mysql-connector-python
+pip install --user mysql-connector-python
 #If the previous does not work use this instead:
 sudo apt-get -y install python-mysql.connector
 #pip install mysql-connector-python
+pip install --user spidev
 
 If you want to use sensor type DS18B20
    sudo pip install w1thermsensor
@@ -21,23 +22,26 @@ If you want to use sensor type DS18B20
 pip install --user --upgrade google-api-python-client
 pip install --user --upgrade google-auth google-auth-oauthlib google-auth-httplib2
 
-git clone https://github.com/adafruit/Adafruit_Python_DHT.git
-cd Adafruit_Python_DHT
-sudo python setup.py install
-cd ..
-rm -r Adafruit_Python_DHT
+    pip install --user Adafruit_DHT
+OR
+    git clone https://github.com/adafruit/Adafruit_Python_DHT.git
+    cd Adafruit_Python_DHT
+    sudo python setup.py install
+    cd ..
+    rm -r Adafruit_Python_DHT
 
 pip install Flask
 pip install pyping
 pip install tinydb
 sudo pip install pytz
 
-#mkdir -p ~/.config/systemd/user/
-#cp scripts/gardenCity.service ~/.config/systemd/user/
-#chmod +x ~/.config/systemd/user/gardenCity.service
-#cp scripts/gardenCity.service ~/.config/systemd/user/
-#chmod +x ~/.config/systemd/user/gardenCity.service
+NO #mkdir -p ~/.config/systemd/user/
+NO #cp scripts/gardenCity<>.service ~/.config/systemd/user/
+NO #chmod +x ~/.config/systemd/user/gardenCity<>.service
+NO #cp scripts/gardenCity.service ~/.config/systemd/user/
+NO #chmod +x ~/.config/systemd/user/gardenCity.service
 
+Remember to install Python libraries as ROOT (or the user configured to run the services) 
 
 mv scripts/gardenCity_WebSensor.service.app scripts/gardenCity_WebSensor.service
 mv scripts/gardenCity_RemoteSensor.service.app scripts/gardenCity_RemoteSensor.service
@@ -70,7 +74,9 @@ and then add:
 5 19 * * * /home/pi/GardenCity/dbReplicator.py
 
 echo 'Install NR24 bla'
+(make sure lib_nrf24.py is in the same folder as the rest of the py files)
 
+Make sure I2C and SPI are disabled in raspi-config or depending of the outputs used it may cause issues
 raspi-config -> interfacing options
 Disable I2C
 Enable SPI
