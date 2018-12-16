@@ -3,6 +3,12 @@ This project allows you to take control of your boiler by stating which zone it 
 It's not fully multi-zone yet, as it needs electronic radiator valves and a little more development for that.  
 It is built using Python and AngularJS.  
   
+  
+Screenshots:  
+Main screen:  
+![Main Screen](https://github.com/ncalligaro/GardenCity/raw/master/screenshots/MainScreen.png)  
+There are a few more screenshots in the screenshots directory  
+    
 ```
 System On/Off Switch:
    When off, kills everything and overrides any schedule until Boiler is on again
