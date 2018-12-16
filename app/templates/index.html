@@ -75,7 +75,7 @@
       <div class="row">
         <div class="col-12">
           {% endraw %}
-          <h3>Current Temperatures <i class="btn btn-lg glyphicon glyphicon-refresh" title="Refresh temperatures" ng-click="fetchCurrentTemperatures()"></i><a href="https://services.nesty.stream:3500/" class="black-hyperlink" title="Show stats" target="_blank"><i class="glyphicon glyphicon-stats" width="20" ng-click="fetchCurrentTemperatures()"></i></a></h3>
+          <h3>Current Temperatures <i class="btn btn-lg glyphicon glyphicon-refresh" ng-show="!isTemperaturePendingRefresh()" title="Refresh temperatures" ng-click="fetchCurrentTemperatures()"></i><img class="img" src="{{ url_for('static', filename='images/spinner.gif') }}" width="20" ng-show="isTemperaturePendingRefresh()" title="Refreshing temperatures"><a href="https://services.nesty.stream:3500/" class="black-hyperlink" title="Show stats" target="_blank"><i class="glyphicon glyphicon-stats" width="20" ng-click="fetchCurrentTemperatures()"></i></a></h3>
           {% raw %}
           <hr class="mb-4"> 
         </div>
@@ -96,7 +96,7 @@
       <div class="row">
         <div class="col-12">
           {% endraw %}
-          <h3>Status <i class="glyphicon glyphicon-refresh btn btn-lg" width="20" title="Refresh system status" ng-click="getBoilerStatus()"></i></h3>
+          <h3>Status <i class="glyphicon glyphicon-refresh btn btn-lg" width="20" ng-show="!refreshingBoiler" title="Refresh system status" ng-click="getBoilerStatus()"></i><img class="img" width="20" src="{{ url_for('static', filename='images/spinner.gif') }}" ng-show="refreshingBoiler" title="Refreshing boiler"></h3>
           {% raw %}
           <hr class="mb-4"> 
         </div>

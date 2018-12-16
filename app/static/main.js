@@ -23,6 +23,8 @@
       $scope.availablePlaces = ['Room','Dining','city_London','Kitchen'];
       $scope.activeSchedule = null;
       $scope.activeSchedulePercentage = 0;
+      $scope.refreshingBoiler = true;
+      $scope.temperaturesPendingRefresh = 0;
 
       $scope.isManualModeEnabled = function(){
         return $scope.systemMode == 'manual';
@@ -93,8 +95,14 @@
 
       $scope.fetchCurrentTemperatures = function() {
         for (var i = 0; i < $scope.availablePlaces.length; i++){
+          $scope.temperaturesPendingRefresh++;
           $scope.fetchAndStoreTemperature($scope.availablePlaces[i]);
         }
+      };
+
+      $scope.isTemperaturePendingRefresh = function() {
+        console.log($scope.temperaturesPendingRefresh);
+        return $scope.temperaturesPendingRefresh != 0;
       };
 
       $scope.fetchAndStoreTemperature = function(place){
@@ -108,6 +116,7 @@
           .then(function onSuccess(response){
             $scope.currentTemperatures[place] = response.data;
             $scope.currentTemperatures[place].roundedTemperature = Math.trunc(response.data.temperature*100)/100;
+            $scope.temperaturesPendingRefresh--;
           })
       };
 
@@ -187,6 +196,7 @@
       };
       
       $scope.getBoilerStatus = function() {
+        $scope.refreshingBoiler = true;
         $scope.getMode();
         $http.get('/heater/status')
         .then(function onSuccess(response){
@@ -198,6 +208,7 @@
           $scope.scheduleOverridenTime = response.data.scheduleOverridenTime;
           $scope.isBoilerOn = response.data.isBoilerOn;
           $scope.isCurrentScheduleOverriden = response.data.isCurrentScheduleOverriden;
+          $scope.refreshingBoiler = false;
         })
       };
 
