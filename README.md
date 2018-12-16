@@ -27,6 +27,8 @@ System On/Off Switch:
 
 There is also a DB Replicator script that allows you to run it on a very low storage system, and then sync daily data to another storage database for history purposes. If you don't need this then don't deploy the #Temporary Satellite database
 
+in otherConfigs you'll also find a Grafana dashboard to connect and be able to see historic data
+
 Settings:
 runtimeSettings.json: Defines runtime variables, like default temperatures and currently selected mode (to restore from in case of power failure)
 * is_system_on: whether the system is on or off ("System is" value)
