@@ -1,3 +1,6 @@
+This project allows you to take control of your boiler by stating which zone it should keep track of at diferent times in the day.
+It's not fully multi-zone yet, as it needs electronic radiator valves and a little more development for that.
+
 System On/Off Switch:
    When off, kills everything and overrides any schedule until Boiler is on again
    When on, it follows Schedule Mode or Manual Mode
@@ -21,6 +24,8 @@ System On/Off Switch:
          if temperature is low, then it turns on
          if temperature is high, then it turns off
       When not mantainTemperature, it turns off
+
+There is also a DB Replicator script that allows you to run it on a very low storage system, and then sync daily data to another storage database for history purposes. If you don't need this then don't deploy the #Temporary Satellite database
 
 Settings:
 runtimeSettings.json: Defines runtime variables, like default temperatures and currently selected mode (to restore from in case of power failure)
@@ -54,8 +59,11 @@ client_secret.json: contains Google configuration values to enable Authenticatio
 
 schedulesDB.json: stores the schedules configuration. 
 
-Log Reason Code Base
 
+
+
+
+Log Reason Code Base
 Format: x.y
 X is the schedule/manual reason
 Y is the temperature reason
